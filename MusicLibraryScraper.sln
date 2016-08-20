@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicLibraryScraper", "MusicLibraryScraper\MusicLibraryScraper.csproj", "{71098968-4F6A-408F-8750-6243866A65D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmazonAlbumArtLookup", "AmazonAlbumArtLookup\AmazonAlbumArtLookup.csproj", "{C3234B14-F371-4985-A44D-521D7637BD63}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonDownloaderScript", "PythonDownloaderScript\PythonDownloaderScript.pyproj", "{C616C739-2C5C-4FF9-9658-68A881BAF94F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Safe|Any CPU = Safe|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71098968-4F6A-408F-8750-6243866A65D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71098968-4F6A-408F-8750-6243866A65D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71098968-4F6A-408F-8750-6243866A65D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71098968-4F6A-408F-8750-6243866A65D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71098968-4F6A-408F-8750-6243866A65D0}.Safe|Any CPU.ActiveCfg = Release|Any CPU
+		{71098968-4F6A-408F-8750-6243866A65D0}.Safe|Any CPU.Build.0 = Release|Any CPU
+		{C3234B14-F371-4985-A44D-521D7637BD63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3234B14-F371-4985-A44D-521D7637BD63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3234B14-F371-4985-A44D-521D7637BD63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3234B14-F371-4985-A44D-521D7637BD63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3234B14-F371-4985-A44D-521D7637BD63}.Safe|Any CPU.ActiveCfg = Safe|Any CPU
+		{C3234B14-F371-4985-A44D-521D7637BD63}.Safe|Any CPU.Build.0 = Safe|Any CPU
+		{C616C739-2C5C-4FF9-9658-68A881BAF94F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C616C739-2C5C-4FF9-9658-68A881BAF94F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C616C739-2C5C-4FF9-9658-68A881BAF94F}.Safe|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
