@@ -6,14 +6,11 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
 
     class Program
     {
-        private static List<Task> _runningThreads = new List<Task>();
         static Stack<FileInfo> _files;
-        static Dictionary<int, string> _taskDict = new Dictionary<int, string>();
         private static FluentCommandLineParser<ScraperArguments> _parser;
 
         static void Main(string[] args)
@@ -56,20 +53,11 @@
                 Logger.TotalFilesScraping = _files.Count;
 
                 // Start Parrallel Work
-                while (_files.Any() || _runningThreads.Any())
-                {
-                    var completed = _runningThreads.Where(task => task.IsCompleted).ToArray();
-                    ThreadExited(completed);
-
-                    _runningThreads = _runningThreads.Where(task => !task.IsCompleted).ToList();
-                    var availableThreads = options.ThreadCount - _runningThreads.Count;
-
-                    StartParallelScraperProcesses(options, availableThreads);
-
-
-                   //Logger.WriteLine($"({Math.Round(Logger.TaskCount / (double)Logger.TotalFilesScraping * 100.00,2)}%) Complete");
-                   Thread.Sleep(500);
-                }
+                Parallel.ForEach(
+                     _files,
+                     new ParallelOptions { MaxDegreeOfParallelism = options.ThreadCount },
+                     file => { Scrape(options, file); }
+                 );
             }
             catch (Exception e)
             {
@@ -97,49 +85,17 @@
             }
         }
 
-        /// <summary>
-        /// Run when a scraper thread has finished running either due to error, success, or abortion.
-        /// </summary>
-        /// <param name="tasks">Array of completed tasks</param>
-        private static void ThreadExited(Task[] tasks)
-        {
-            foreach (var task in tasks)
-            {
-                if (task.Status == TaskStatus.RanToCompletion)
-                {
-                    //Logger.WriteSuccess($"Successfully scraped file {_taskDict[task.Id]}");
-                }
-                else if (task.Status == TaskStatus.Faulted)
-                {
-                    Logger.WriteError($"Failed to scrape file {_taskDict[task.Id]}. {task.Exception.InnerException?.Message}");
-                }
-                else
-                {
-                    Logger.WriteError($"Failed to scrape file {_taskDict[task.Id]}. Task Aborted.");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Starts as many parallel scrapers as specified in the thread cmd line parameter.
-        /// </summary>
-        /// <param name="options">Command line parameter options. <see cref="ScraperArguments"/></param>
-        /// <param name="availableThreads">number of slots for parallel threads</param>
-        private static void StartParallelScraperProcesses(ScraperArguments options, int availableThreads)
-        {
-            var taskFactory = new TaskFactory();
-            for (var numStarted = 0; numStarted < availableThreads && _files.Count > 0; numStarted++)
-            {
-                var file = _files.Pop();
-                var task = taskFactory.StartNew(() => Scrape(options, file));
-                _runningThreads.Add(task);
-                _taskDict.Add(task.Id, file.Name);
-            }
-        }
-
         private static void Scrape(ScraperArguments options, FileInfo file) {
-            var scraper = new MusicFileScraper();
-            scraper.Scrape(options, file);
+            try
+            {
+
+                var scraper = new MusicFileScraper();
+                scraper.Scrape(options, file);
+            }
+            catch (Exception e)
+            {
+                Logger.WriteError($"Failed to scrape file {file.Name}. {e.InnerException?.Message ?? e.Message}");
+            }
         }
 
         /// <summary>
