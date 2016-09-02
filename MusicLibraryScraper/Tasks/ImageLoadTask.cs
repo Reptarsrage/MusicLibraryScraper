@@ -34,7 +34,14 @@
             get
             {
                 lock (lockMe) {
-                    return (Image)base.Result.Clone();
+                    if (base.Result != null)
+                    {
+                        return (Image)base.Result.Clone();
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 }
             }
         }

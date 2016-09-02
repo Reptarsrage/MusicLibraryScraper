@@ -19,19 +19,30 @@ namespace MusicLibraryScraper
                 Task action;
                 if (methodQueue.TryDequeue(out action))
                 {
-                lock (slock) // lock just for starting tasks in case there is ever any overlap
-                {
-                    if (action.Status.Equals(TaskStatus.Created))
-                    {
-                            Logger.WriteLine("Starting Task.");
-                            action.Start();
-                    }
-                }
+                    startTask(action);
                 }
             }
         }
 
-        public static void AddTask(Task task)
+
+        private static void startTask(Task action)
+        {
+            lock (slock) // lock just for starting tasks in case there is ever any overlap
+            {
+                if (action.Status.Equals(TaskStatus.Created))
+                {
+                    //Logger.WriteLine("Starting Task.");
+                    action.Start();
+                }
+            }
+        }
+
+        public static void startTaskImmediately(Task task)
+        {
+            startTask(task);
+        }
+
+        public static void throttleTask(Task task)
         {
             if (timer == null)
             {

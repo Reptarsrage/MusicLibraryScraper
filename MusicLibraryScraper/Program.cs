@@ -34,22 +34,24 @@
                 MusicFileScraper scraper = new MusicFileScraper();
                 _files = scraper.DirSearch(options);
 
-                // Copy files to final dest
-                Logger.WriteLine($"\nCopying music files to {options.OutputDir}");
+                //Copy files to final dest
+                Logger.WriteLine($"\n\nCopying music files to {options.OutputDir}");
                 var temp = new Stack<FileInfo>();
                 var ct = _files.Count;
                 while (_files.Count > 0)
                 {
                     Logger.drawTextProgressBar(ct - _files.Count, ct);
-                    File.Copy(_files.Peek().FullName, Path.Combine(options.OutputDir,_files.Peek().Name), true); 
-                    temp.Push(_files.Pop());
+                    File.Copy(_files.Peek().FullName, Path.Combine(options.OutputDir, _files.Peek().Name), true);
+
+                    temp.Push(new FileInfo(Path.Combine(options.OutputDir, _files.Peek().Name)));
+                    _files.Pop();
                 }
 
                 while (temp.Count > 0)
                 {
                     _files.Push(temp.Pop());
                 }
-                Logger.WriteLine($"\nFinished copying files.");
+                Logger.WriteLine($"\nFinished copying files.\n\n");
 
                 Logger.TotalFilesScraping = _files.Count;
 

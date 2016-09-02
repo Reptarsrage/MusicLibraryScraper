@@ -1,18 +1,27 @@
 ﻿namespace MusicLibraryScraper.Tasks
 {
+    using Managers;
     using Modals;
     using System.Threading.Tasks;
 
-    class GoogleImageUrlTask : Task<GoogleResult>
+    class GoogleImageUrlTask : Task<AlbumArtResults>
     {
 
-        public static GoogleResult GetAlbumImageURL(string query) {
+        public static AlbumArtResults GetAlbumImageURL(string query) {
             Logger.WriteLine($"Fetching image from Google using query: {query}");
             Logger.IncrementGooglerequestCounter();
             var lookup = new GoogleImageDownloadManager();
-            var res =  lookup.GetBestMatchURL(query);
-            Logger.WriteSuccess($"Image found on google for {query}.");
-            return res;
+            var res =  lookup.GetGoogleResults(query);
+
+            if (res != null)
+            {
+                Logger.WriteSuccess($"Image found on google for {query}.");
+                return new AlbumArtResults(res);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public GoogleImageUrlTask(string query) : base(() => GetAlbumImageURL(query))

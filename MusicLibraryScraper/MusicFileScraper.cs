@@ -1,222 +1,106 @@
 ﻿namespace MusicLibraryScraper
 {
+    using Managers;
     using Modals;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Drawing;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using System.Threading;
-    using System.Threading.Tasks;
     using Tasks;
 
     class MusicFileScraper
     {
+        private TaskManager _taskMan;
+
+       public MusicFileScraper()
+        {
+            _taskMan = new TaskManager();
+        }
+
+        #region public methods
+
         public void Scrape(ScraperArguments options, FileInfo file)
         {
-            Logger.AddOrigionalFileSize(file.Length);
-
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
-            var tagLib = new TagLibUtilities();
-
-            var artist = tagLib.GetArtist(file);
-            var albumArtist = tagLib.GetAlbumArtist(file);
-            var title = tagLib.GetTitle(file);
-            var album = tagLib.GetAlbum(file);
-            var filename = Path.GetFileNameWithoutExtension(file.FullName);
+            FileInfo art;
+            TagLibUtilities tagLib;
+            string artist;
+            string albumArtist;
+            string title;
+            string album;
+            string filename;
             string url = null;
             string fileType = null;
+            Stopwatch watch = new Stopwatch();
+            AlbumArtResults results;
+            Image albumArt;
 
-            using (var task = CacheManager.GetAlbumImageURL(string.IsNullOrEmpty(albumArtist) ? artist : albumArtist, string.IsNullOrEmpty(album) ? filename : album))
+            Logger.AddOrigionalFileSize(file.Length);
+
+            watch.Start();
+
+            tagLib = new TagLibUtilities();
+            artist = tagLib.GetArtist(file);
+            albumArtist = tagLib.GetAlbumArtist(file);
+            title = tagLib.GetTitle(file);
+            album = tagLib.GetAlbum(file);
+            filename = Path.GetFileNameWithoutExtension(file.FullName);
+
+            Logger.WriteLine($"Scraping file ({Path.GetFileNameWithoutExtension(file.FullName)}).");
+
+            // Try Amazon first
+            var task = CacheManager.GetAlbumImageURL(string.IsNullOrEmpty(albumArtist) ? artist : albumArtist, string.IsNullOrEmpty(album) ? filename : album);
+
+            if (_taskMan.RunTask(task, $"getting album art for music file: ({Path.GetFileNameWithoutExtension(file.FullName)}) using amazon.", true) && 
+                task.Result != null && task.Result.Results != null)
             {
-
-                if (!task.IsCompleted)
-                {
-                    RequestThrottler.AddTask(task);
-                }
-
-                while (!task.IsCompleted) { /* Spin spin spin */ Thread.Sleep(500); }
-
-                if (task.IsFaulted)
-                {
-                    Logger.WriteError($"Error getting image on amazon for file: {Path.GetFileNameWithoutExtension(file.FullName)}.\n{task.Exception.InnerExceptions[0].Message}\n{task.Exception.InnerExceptions[0].StackTrace}");
-                    var result = UseAlternateGoogleScraper(options, file);
-                    url = result.Url;
-                    fileType = result.Type;
-                }
-                else if (task.IsCanceled || string.IsNullOrEmpty(task.Result))
-                {
-                    Logger.WriteWarning($"No image found on amazon for file: {Path.GetFileNameWithoutExtension(file.FullName)}.");
-                    var result = UseAlternateGoogleScraper(options, file);
-                    url = result?.Url ?? null;
-                    fileType = result.Type;
-                }
-                else
-                {
-                    url = task.Result;
-                    Logger.IncrementTaskFound();
-                }
+                results = task.Result;
+                Logger.IncrementTaskFound();
+            }
+            else
+            {
+                // Try Google second
+                results = UseAlternateGoogleScraper(options, file);
             }
 
-            if (url != null)
-            {
-                fileType = string.IsNullOrWhiteSpace(fileType) ? "png" : fileType;
-                FileInfo art;
-                if ((art = DownloadImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null)
+            // loop through results until we've successfully downloaded and loaded the image
+            if (results != null) {
+                int i = 0;
+                foreach (var result in results.Results ?? new List<AlbumArtResult>())
                 {
-                    TagFile(options, file, tagLib, art);
+                    url = result?.Url ?? null;
+                    fileType = result?.ImageType ?? ""; // leave blank and let mime type decide
+                    if (url != null &&
+                        (art = DownloadImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null && // Downloaded art
+                        (albumArt = LoadImage(art)) != null &&                                                          // Loaded art
+                        TagMusicFile(file, tagLib, albumArt))                                                           // tagged file
+                    {
+                        // Success!
+                        Logger.IncrementTaskCompleted();
+                        break;
+                    }
+                    else
+                    {
+                        // Failure!
+                        if (i == results.Results.Count)
+                        {
+                            Logger.WriteError($"Failed to scrape file: { Path.GetFileNameWithoutExtension(file.FullName)}.");
+                        }
+                        else
+                        {
+                            Logger.WriteWarning($"Failed to scrape file: { Path.GetFileNameWithoutExtension(file.FullName)}. Trying another image...");
+                        }
+                    }
+                    i++;
                 }
             }
 
             watch.Stop();
             Logger.IncrementTaskTotal();
+            Logger.AddFinalFileSize(file.Length);
             Logger.AddTaskTime(watch.ElapsedMilliseconds);
-        }
-
-        private GoogleResult UseAlternateGoogleScraper(ScraperArguments options, FileInfo file)
-        {
-            Logger.WriteLine($"Using Google as alternate image source for file: {Path.GetFileNameWithoutExtension(file.FullName)}");
-
-            var tagLib = new TagLibUtilities();
-            var artist = tagLib.GetArtist(file);
-            var albumArtist = tagLib.GetAlbumArtist(file);
-            var title = tagLib.GetTitle(file);
-            var album = tagLib.GetAlbum(file);
-
-            var query = "album art";
-            if (!string.IsNullOrWhiteSpace(albumArtist))
-            {
-                query = $"{album} by {albumArtist} album art";
-            }
-            else if (!string.IsNullOrWhiteSpace(artist))
-            {
-                query = $"{album} by {artist} album art";
-
-            }
-            else if (!string.IsNullOrWhiteSpace(album))
-            {
-                query = $"{album} album art";
-            }
-            else if (!string.IsNullOrWhiteSpace(title))
-            {
-                query = $"{title} album art";
-            }
-
-            Regex r = new Regex(@"\s+");
-
-            query = r.Replace(query, " "); // remove unnecessary spaces
-
-            using (var task = CacheManager.GetAlbumImageURLUsingGoogle(query))
-            {
-
-                if (!task.IsCompleted)
-                {
-                    RequestThrottler.AddTask(task);
-                }
-
-                while (!task.IsCompleted) { /* Spin spin spin */ Thread.Sleep(500); }
-
-                if (task.IsFaulted)
-                {
-                    Logger.WriteError($"Error getting image URL from Google for file: {Path.GetFileNameWithoutExtension(file.FullName)}.\n{task.Exception.InnerExceptions[0].Message}");
-                }
-                else if (task.IsCanceled || task.Result == null)
-                {
-                    Logger.WriteError($"No image found on Google for file: {Path.GetFileNameWithoutExtension(file.FullName)}");
-                }
-                else
-                {
-                    Logger.IncrementTaskFound();
-                    return task.Result;
-                }
-            }
-            return null;
-        }
-
-        private void TagFile(ScraperArguments options, FileInfo music, TagLibUtilities tagLib, FileInfo art)
-        {
-            if (!File.Exists(art.FullName))
-            {
-                Logger.WriteError($"Error tagging file {music.Name}, album art {art.FullName} not found.");
-                return;
-            }
-            using (var task = CacheManager.GetLoadedImage(art))
-            {
-                try
-                {
-                    if (!task.IsCompleted)
-                    {
-                        RequestThrottler.AddTask(task);
-                    }
-
-                    while (!task.IsCompleted) { /* Spin spin spin */ Thread.Sleep(500); }
-
-                    if (task.IsFaulted)
-                    {
-                        throw new Exception($"Error loading image: {art.FullName}.\n{task.Exception.InnerExceptions[0].Message}");
-                    }
-                    else if (task.IsCanceled || task.Result == null)
-                    {
-                        throw new Exception($"Error loading image: {art.FullName}.");
-                    }
-                    else
-                    {
-                        using (var image = ((ImageLoadTask)task).Result)
-                        {
-                            if (tagLib.TagFileWithCoverArtwork(music, image))
-                            {
-                                Logger.IncrementTaskCompleted();
-                                Logger.WriteSuccess($"Successfully added artwork to file {music.FullName}");
-                            }
-                            else
-                            {
-                                Logger.WriteError($"Unknown error adding artwork to file {music.FullName}");
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.WriteError($"Error tagging file {music.Name} {e.Message}\n {e.StackTrace}");
-                    return;
-                }
-                finally
-                {
-                    Logger.AddFinalFileSize(music.Length);
-                }
-            }
-        }
-
-
-        private FileInfo DownloadImage(string url, string filetype, DirectoryInfo outDir, TagLibUtilities tagLib)
-        {
-            using (var task = CacheManager.GetAlbumImageFile(url, filetype, outDir))
-            {
-
-                if (!task.IsCompleted)
-                {
-                    RequestThrottler.AddTask(task);
-                }
-
-                while (!task.IsCompleted || task.Status == TaskStatus.Running) { /* Spin spin spin */ Thread.Sleep(500); }
-
-                if (task.IsFaulted)
-                {
-                    Logger.WriteError($"Error downoading image: {task.Exception.InnerExceptions[0].Message}");
-                }
-                else if (task.IsCanceled || task.Result == null)
-                {
-                    Logger.WriteError($"Unable to download image as {url}.");
-                }
-                else
-                {
-                    return task.Result;
-                }
-            }
-            return null;
         }
 
         /// <summary>
@@ -227,7 +111,7 @@
         public Stack<FileInfo> DirSearch(ScraperArguments options)
         {
             var watch = new Stopwatch();
-            
+
 
             if (!Directory.Exists(options.SourceDir))
             {
@@ -259,11 +143,11 @@
                     }
                 }
 
-                
+
                 foreach (var f in Directory.GetFiles(root.FullName))
                 {
                     fileCt++;
-                    
+
                     if (extensions.ContainsKey(Path.GetExtension(f).ToLower()))
                     {
                         extensions[Path.GetExtension(f).ToLower()]++;
@@ -272,7 +156,7 @@
                     {
                         extensions[Path.GetExtension(f).ToLower()] = 1;
                     }
-                    
+
                     if (patterns.Contains(Path.GetExtension(f), StringComparer.CurrentCultureIgnoreCase))
                     {
                         fileCt2++;
@@ -291,7 +175,8 @@
             Logger.WriteLine($"Music files: ");
             List<string> list = extensions.Keys.ToList();
             list.Sort((key1, key2) => -extensions[key1].CompareTo(extensions[key2]));
-            foreach (var x in list) {
+            foreach (var x in list)
+            {
                 if (patterns.Contains(x, StringComparer.CurrentCultureIgnoreCase))
                 {
                     Logger.WriteLine($"\t({extensions[x]}) files with extension '{x}'");
@@ -309,5 +194,127 @@
 
             return files;
         }
+
+        #endregion
+
+        #region private methods
+
+        private AlbumArtResults UseAlternateGoogleScraper(ScraperArguments options, FileInfo file)
+        {
+            Logger.WriteLine($"Using Google as alternate image source for file: {Path.GetFileNameWithoutExtension(file.FullName)}");
+
+            var query = CreateQuery(file);
+
+            var task = CacheManager.GetAlbumImageURLUsingGoogle(query);
+            
+            var description = $"getting album art for music file: ({Path.GetFileNameWithoutExtension(file.FullName)}) using google.";
+            if (_taskMan.RunTask(task, description, true))
+            {
+                if (task.Result != null && task.Result.Results != null)
+                {
+                    Logger.IncrementTaskFound();
+                    return task.Result;
+                }
+                else
+                {
+                    Logger.WriteError($"Error: {description}.\nNo Results found for query '{query}'.");
+                }
+            }
+            
+            return null;
+        }
+
+        private bool TagMusicFile(FileInfo music, TagLibUtilities tagLib, Image image)
+        {
+            try
+            {
+                if (tagLib.TagFileWithCoverArtwork(music, image))
+                {
+                    Logger.WriteSuccess($"Successfully added artwork to file {music.FullName}");
+                    return true;
+                }
+                else
+                {
+                    Logger.WriteError($"Unknown error adding artwork to file {music.FullName}");
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.WriteError($"Error tagging file {music.Name} {e.Message}\n {e.StackTrace}");
+                return false;
+            }
+            finally
+            {
+                image.Dispose();
+            }
+        }
+
+
+        private Image LoadImage(FileInfo art)
+        {
+            if (!File.Exists(art.FullName))
+            {
+                Logger.WriteError($"Error loading image, album art {art.FullName} not found.");
+                return null;
+            }
+
+            var task = CacheManager.GetLoadedImage(art);
+            if (_taskMan.RunTask(task, $"loading image: {art.FullName}.", false))
+            {
+                Logger.WriteLine($"Loaded image {art.FullName}.");
+                return ((ImageLoadTask)task).Result; // Cast is crucial as the result is cloned here but only for the ImageLoadTask subclass.
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+
+        private FileInfo DownloadImage(string url, string filetype, DirectoryInfo outDir, TagLibUtilities tagLib)
+        {
+            var task = CacheManager.GetAlbumImageFile(url, filetype, outDir);
+
+            if (_taskMan.RunTask(task, $"downoading image: {url}.", false))
+            {
+                return task.Result;
+            }
+            
+            return null;
+        }
+
+        private string CreateQuery(FileInfo file)
+        {
+            var tagLib = new TagLibUtilities();
+            var artist = tagLib.GetArtist(file);
+            var albumArtist = tagLib.GetAlbumArtist(file);
+            var title = tagLib.GetTitle(file);
+            var album = tagLib.GetAlbum(file);
+
+            var query = "album art";
+            if (!string.IsNullOrWhiteSpace(albumArtist))
+            {
+                query = $"{album} by {albumArtist} album art";
+            }
+            else if (!string.IsNullOrWhiteSpace(artist))
+            {
+                query = $"{album} by {artist} album art";
+
+            }
+            else if (!string.IsNullOrWhiteSpace(album))
+            {
+                query = $"{album} album art";
+            }
+            else if (!string.IsNullOrWhiteSpace(title))
+            {
+                query = $"{title} album art";
+            }
+
+            Regex r = new Regex(@"\s+");
+
+            return r.Replace(query, " "); // remove unnecessary spaces
+        }
+        #endregion
     }
 }

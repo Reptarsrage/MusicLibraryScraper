@@ -27,8 +27,8 @@ class Payload(object):
 #                            #
 ##############################
 
-def buildQuery(query, extension):
-    return "https://www.google.com/search?as_st=y&tbm=isch&as_q=%s&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:vga,itp:photo,iar:s,ift:%s" % (query, extension) 
+def buildQuery(query):
+    return "https://www.google.com/search?as_st=y&tbm=isch&as_q=%s&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:vga,iar:s" % (query) 
 
 def find(str, pattern):
     p = re.compile(pattern)
@@ -45,7 +45,7 @@ def exitErr( str ):
    sys.exit(0)
 
 def downloadImage(query):
-    site = buildQuery(query, "png")
+    site = buildQuery(query)
     hdr = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
          'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',

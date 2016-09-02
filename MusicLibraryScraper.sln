@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AmazonAlbumArtLookup", "Ama
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonDownloaderScript", "PythonDownloaderScript\PythonDownloaderScript.pyproj", "{C616C739-2C5C-4FF9-9658-68A881BAF94F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicLibraryScraperTests", "Tests\MusicLibraryScraperTests.csproj", "{2A2758F5-359D-41FE-9F21-F9D5E2481D00}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,12 @@ Global
 		{C616C739-2C5C-4FF9-9658-68A881BAF94F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C616C739-2C5C-4FF9-9658-68A881BAF94F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C616C739-2C5C-4FF9-9658-68A881BAF94F}.Safe|Any CPU.ActiveCfg = Release|Any CPU
+		{2A2758F5-359D-41FE-9F21-F9D5E2481D00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A2758F5-359D-41FE-9F21-F9D5E2481D00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A2758F5-359D-41FE-9F21-F9D5E2481D00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A2758F5-359D-41FE-9F21-F9D5E2481D00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A2758F5-359D-41FE-9F21-F9D5E2481D00}.Safe|Any CPU.ActiveCfg = Release|Any CPU
+		{2A2758F5-359D-41FE-9F21-F9D5E2481D00}.Safe|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

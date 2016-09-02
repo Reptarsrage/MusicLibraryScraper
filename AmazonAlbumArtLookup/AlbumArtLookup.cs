@@ -11,8 +11,9 @@ namespace AmazonAlbumArtLookup
     using System.Xml;
     using System.Xml.Serialization;
     using System.Configuration;
-    using static Modals.XmlSerialization;
     using System.Text.RegularExpressions;
+    using Modals;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// <para>
@@ -41,21 +42,70 @@ namespace AmazonAlbumArtLookup
         /// <param name="artist">Name of the artist of the album</param>
         /// <param name="verbose">Prints helpful debugging info to console.</param>
         /// <returns> The URL for the largest image listed for the item which bestb matches the search parameters.</returns>
-        public string GetAlbumArt(string album, string artist, bool verbose = false) {
+        public List<AWSMusicItem> GetAlbumArt(string album, string artist, bool verbose = false)
+        {
+            if (album == null || artist == null || (string.IsNullOrEmpty(album) && string.IsNullOrEmpty(artist)))
+            {
+                return null;
+            }
+
+            IDictionary<string, string> request = new Dictionary<string, String>();
+            request["Service"] = "AWSECommerceService";
+            request["Operation"] = "ItemSearch";
+            request["Title"] = album; // Keywords
+            request["Version"] = "2011-08-01";
+            request["SearchIndex"] = "Music";
+            request["Artist"] = artist;
+            request["AssociateTag"] = ConfigurationManager.AppSettings["AWSAssociateTag"];
+            request["ResponseGroup"] = "Images,ItemAttributes";
+
+            var result = GetAlbumArt(request, verbose);
+            if (result != null)
+            {
+                result.RemoveAll(item => (item?.Attributes?.Artist ?? null) == null || (item?.Attributes?.Title ?? null) == null);
+                result.RemoveAll(item => (item?.LargeImage?.Url ?? null) == null);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Retrieves album art from AWS using the given search parameters. 
+        /// </summary>
+        /// <param name="query">Search query</param>
+        /// <param name="verbose">Prints helpful debugging info to console.</param>
+        /// <returns> The URL for the largest image listed for the item which bestb matches the search parameters.</returns>
+        public List<AWSMusicItem> GetAlbumArt(string query, bool verbose = false)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                return null;
+            }
+
+            IDictionary<string, string> request = new Dictionary<string, String>();
+            request["Service"] = "AWSECommerceService";
+            request["Operation"] = "ItemSearch";
+            request["Keywords"] = query;
+            request["Version"] = "2011-08-01";
+            request["SearchIndex"] = "Music";
+            request["AssociateTag"] = ConfigurationManager.AppSettings["AWSAssociateTag"];
+            request["ResponseGroup"] = "Images,ItemAttributes";
+
+            var result = GetAlbumArt(request, verbose);
+            if (result != null)
+            {
+                result.RemoveAll(item => (item?.Attributes?.Artist ?? null) == null || (item?.Attributes?.Title ?? null) == null);
+                result.RemoveAll(item => (item?.LargeImage?.Url ?? null) == null);
+            }
+            return result;
+        }
+
+        private List<AWSMusicItem> GetAlbumArt(IDictionary<string, string> requestDict, bool verbose = false) {
+
+
             SignedRequestHelper helper = new SignedRequestHelper(ConfigurationManager.AppSettings["AWSKeyID"], 
                 ConfigurationManager.AppSettings["AWSSecretKey"], ConfigurationManager.AppSettings["AWSDestination"]);
 
-            IDictionary <string, string> r1 = new Dictionary<string, String>();
-            r1["Service"] = "AWSECommerceService";
-            r1["Operation"] = "ItemSearch";
-            r1["Keywords"] = album;
-            r1["Version"] = "2011-08-01";
-            r1["SearchIndex"] = "Music";
-            r1["Artist"] = artist;
-            r1["AssociateTag"] = ConfigurationManager.AppSettings["AWSAssociateTag"];
-            r1["ResponseGroup"] = "Images,ItemAttributes";
-
-            var requestUrl = helper.Sign(r1);
+            var requestUrl = helper.Sign(requestDict);
             var items = FetchImageObjects(requestUrl, verbose);
 
             if (verbose)
@@ -68,7 +118,7 @@ namespace AmazonAlbumArtLookup
                 }
             }
 
-            return items?.Count == 0 ? null : items[0]?.LargeImage?.Url ?? null;
+            return (items?.Count ?? 0) == 0 ? null : items;
         }
 
         /// <summary>
@@ -98,7 +148,7 @@ namespace AmazonAlbumArtLookup
             catch (TimeoutException)
             {
                 System.Threading.Thread.Sleep(expRetry);
-                expRetry *= 2;
+                expRetry = Math.Min(expRetry*2, new Random(DateTime.Now.Millisecond).Next(5000, 15000)); // cap at 5-15 seconds
                 return FetchImageObjects(url, verbose);
             }
             catch (WebException ex)
@@ -120,7 +170,7 @@ namespace AmazonAlbumArtLookup
                         if (throttled.IsMatch(code))
                         {
                             System.Threading.Thread.Sleep(expRetry);
-                            expRetry *= 2;
+                            expRetry = Math.Min(expRetry * 2, new Random(DateTime.Now.Millisecond).Next(5000, 15000)); // cap at 5-15 seconds
                             return FetchImageObjects(url, verbose);
                         }
 
@@ -148,8 +198,8 @@ namespace AmazonAlbumArtLookup
 
                     stm.Position = 0;
 
-                    XmlSerializer ser = new XmlSerializer(typeof(T), ConfigurationManager.AppSettings["AWSXMLNamespace"]);
-                    T result = (ser.Deserialize(stm) as T);
+                    var xml = new XmlSerializer(typeof(T), ConfigurationManager.AppSettings["AWSXMLNamespace"]);
+                    T result = (xml.Deserialize(stm) as T);
 
                     return result;
                 }

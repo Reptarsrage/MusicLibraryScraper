@@ -27,7 +27,7 @@ namespace AmazonAlbumArtLookup
     using System.Web;
     using System.Security.Cryptography;
 
-    class SignedRequestHelper
+    internal class SignedRequestHelper
     {
         private string endPoint;
         private string akid;
@@ -49,7 +49,7 @@ namespace AmazonAlbumArtLookup
          *  FR: ecs.amazonaws.fr
          *  CA: ecs.amazonaws.ca
          */
-        public SignedRequestHelper(string awsAccessKeyId, string awsSecretKey, string destination)
+        internal SignedRequestHelper(string awsAccessKeyId, string awsSecretKey, string destination)
         {
             this.endPoint = destination.ToLower();
             this.akid = awsAccessKeyId;
@@ -63,7 +63,7 @@ namespace AmazonAlbumArtLookup
          * This method returns a complete URL to use. Modifying the returned URL
          * in any way invalidates the signature and Amazon will reject the requests.
          */
-        public string Sign(IDictionary<string, string> request)
+        internal string Sign(IDictionary<string, string> request)
         {
             // Use a SortedDictionary to get the parameters in naturual byte order, as
             // required by AWS.
@@ -113,7 +113,7 @@ namespace AmazonAlbumArtLookup
          * This method returns a complete URL to use. Modifying the returned URL
          * in any way invalidates the signature and Amazon will reject the requests.
          */
-        public string Sign(string queryString)
+        internal string Sign(string queryString)
         {
             IDictionary<string, string> request = this.CreateDictionary(queryString);
             return this.Sign(request);
@@ -136,7 +136,7 @@ namespace AmazonAlbumArtLookup
          * according to the above standard. Also, .NET returns lower-case encoding
          * by default and Amazon requires upper-case encoding.
          */
-        private string PercentEncodeRfc3986(string str)
+        internal string PercentEncodeRfc3986(string str)
         {
             str = HttpUtility.UrlEncode(str, System.Text.Encoding.UTF8);
             str = str.Replace("'", "%27").Replace("(", "%28").Replace(")", "%29").Replace("*", "%2A").Replace("!", "%21").Replace("%7e", "~").Replace("+", "%20");
@@ -212,7 +212,7 @@ namespace AmazonAlbumArtLookup
         /*
          * Consttuct the canonical query string from the sorted parameter map.
          */
-        private string ConstructCanonicalQueryString(SortedDictionary<string, string> sortedParamMap)
+        internal string ConstructCanonicalQueryString(SortedDictionary<string, string> sortedParamMap)
         {
             StringBuilder builder = new StringBuilder();
 
@@ -237,8 +237,8 @@ namespace AmazonAlbumArtLookup
 
     /*
      * To help the SortedDictionary order the name-value pairs in the correct way.
-     */     
-    class ParamComparer : IComparer<string>
+     */
+    internal class ParamComparer : IComparer<string>
     {
         public int Compare(string p1, string p2)
         {

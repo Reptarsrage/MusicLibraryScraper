@@ -68,11 +68,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CacheManager.cs" />
-    <Compile Include="GoogleImageDownloadManager.cs" />
-    <Compile Include="Modals\AmazonResult.cs" />
+    <Compile Include="Managers\CacheManager.cs" />
+    <Compile Include="Managers\GoogleImageDownloadManager.cs" />
+    <Compile Include="Managers\ImageManager.cs" />
+    <Compile Include="Modals\AlbumArtResult.cs" />
+    <Compile Include="Modals\AlbumArtResults.cs" />
     <Compile Include="Modals\GoogleResult.cs" />
     <Compile Include="Modals\GoogleResults.cs" />
+    <Compile Include="Managers\TaskManager.cs" />
     <Compile Include="Tasks\ImageLoadTask.cs" />
     <Compile Include="Tasks\ImageTask.cs" />
     <Compile Include="Tasks\GoogleImageUrlTask.cs" />

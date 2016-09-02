@@ -34,16 +34,38 @@
 
         public List<Image> GetTaggedArtwork(FileInfo musicFile)
         {
-            var file = TagLib.File.Create(musicFile.FullName);
-            var images = new List<Image>();
-            foreach (var imageData in file.Tag.Pictures)
+            try
             {
-                var bin = (byte[])(imageData.Data.Data);
-                var image = Image.FromStream(new MemoryStream(bin));//.GetThumbnailImage(100, 100, null, IntPtr.Zero);
-                images.Add(image);
-            }
+                var file = TagLib.File.Create(musicFile.FullName);
+                var images = new List<Image>();
+                foreach (var imageData in file.Tag.Pictures)
+                {
+                    var bin = (byte[])(imageData.Data.Data);
+                    var image = Image.FromStream(new MemoryStream(bin));//.GetThumbnailImage(100, 100, null, IntPtr.Zero);
+                    images.Add(image);
+                }
 
-            return images;
+                return images;
+            } catch {
+                return null;
+            }
+        }
+
+        public bool RemoveTaggedArtwork(FileInfo musicFile)
+        {
+            var file = TagLib.File.Create(musicFile.FullName);
+
+            file.Tag.Pictures = new TagLib.IPicture[] { };
+            file.Save();
+
+            if ((GetTaggedArtwork(musicFile)?.Count ??  1) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public bool TagFileWithCoverArtwork(FileInfo musicFile, Image imageFile)
