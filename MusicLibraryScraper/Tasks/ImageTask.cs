@@ -47,7 +47,7 @@
                         }
                         else
                         {
-                            throw new FileNotFoundException("Couldd not access the downloaded image.");
+                            throw new FileNotFoundException("Could not access the downloaded image.");
                         }
 
                     }

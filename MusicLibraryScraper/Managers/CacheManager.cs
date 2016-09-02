@@ -14,10 +14,12 @@
         private static Dictionary<string, Task<AlbumArtResults>> _imageUrlCache;
         private static Dictionary<string, Task<AlbumArtResults>> _googleImageUrlCache;
         private static Dictionary<string, Task<FileInfo>> _imageFileCache;
+        private static Dictionary<string, Task<FileInfo>> _imageOptimizedFileCache;
         private static object _imageFileCacheLock = new object();
         private static object _googleImageUrlCacheLock = new object();
         private static object _imageUrlCacheLock = new object();
         private static object _imageLoadCacheLock = new object();
+        private static object _imageOptimizedFileCacheLock = new object();
         private static ulong _imageCacheSize = 0;
         private const ulong MAX_SIZE = 100000000; // 100MB
         private static SortedList<long, string> _imageLoadCacheHistory;
@@ -26,6 +28,28 @@
         private static string store(string s, string s2)
         {
             return s + "/" + s2;
+        }
+
+        public static Task<FileInfo> GetOptimizedImage(FileInfo image, DirectoryInfo dir)
+        {
+            lock (_imageOptimizedFileCacheLock)
+            {
+                if (_imageOptimizedFileCache == null)
+                {
+                    _imageOptimizedFileCache = new Dictionary<string, Task<FileInfo>>();
+                }
+
+                if (_imageOptimizedFileCache.ContainsKey(image.FullName))
+                {
+                    return _imageOptimizedFileCache[image.FullName];
+                }
+                else
+                {
+                    var task = new ImageOptimizeTask(image, dir);
+                    _imageOptimizedFileCache.Add(image.FullName, task);
+                    return task;
+                }
+            }
         }
 
         public static Task<Image> GetLoadedImage(FileInfo image)

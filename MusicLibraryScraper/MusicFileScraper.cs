@@ -74,6 +74,7 @@
                     fileType = result?.ImageType ?? ""; // leave blank and let mime type decide
                     if (url != null &&
                         (art = DownloadImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null && // Downloaded art
+                        ((art = OptimizeImage(art, options.OptimizedImageOutDir)) != null)  &&                                                        // Optimize art
                         (albumArt = LoadImage(art)) != null &&                                                          // Loaded art
                         TagMusicFile(file, tagLib, albumArt))                                                           // tagged file
                     {
@@ -250,6 +251,31 @@
             }
         }
 
+        private FileInfo OptimizeImage(FileInfo art, string @out)
+        {
+            if (!File.Exists(art.FullName))
+            {
+                Logger.WriteError($"Error optimizing image, album art {art.FullName} not found.");
+                return null;
+            }
+
+            var dir = art.Directory;
+            if (@out != null && Directory.Exists(Path.GetFullPath(@out)))
+            {
+                dir = new DirectoryInfo(Path.GetFullPath(@out));
+            }
+
+            var task = CacheManager.GetOptimizedImage(art, dir);
+            if (_taskMan.RunTask(task, $"optimizing image: {art.FullName}.", false))
+            {
+                Logger.WriteLine($"Optimized image {art.FullName}.");
+                return ((ImageOptimizeTask)task).Result;
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         private Image LoadImage(FileInfo art)
         {
