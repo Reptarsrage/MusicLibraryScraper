@@ -3,14 +3,14 @@
     using System;
     using System.Drawing;
     using System.IO;
+    using System.Net;
     using System.Threading.Tasks;
 
 
-    class ImageLoadTask : Task<Image>
+    class ImageLoadTask : ConcurrentImageTask
     {
-        private object lockMe = new object();
-
-        public static Image LoadImage(FileInfo image) {
+        public static Image LoadImageFromFile(FileInfo image)
+        {
             Logger.WriteLine($"loading image {image}");
             try
             {
@@ -22,28 +22,10 @@
                 Logger.WriteError($"Image {image} is invalid. Unable to load.");
                 return null;
             }
-            
         }
 
-        public ImageLoadTask(FileInfo image) : base(() => LoadImage(image))
+        public ImageLoadTask(FileInfo image) : base(() => LoadImageFromFile(image))
         {
-        }
-
-        public new Image Result
-        {
-            get
-            {
-                lock (lockMe) {
-                    if (base.Result != null)
-                    {
-                        return (Image)base.Result.Clone();
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-            }
-        }
+        }        
     }
 }

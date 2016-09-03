@@ -1,6 +1,7 @@
 ﻿namespace MusicLibraryScraper
 {
     using Fclp;
+    using Managers;
     using Modals;
     using System;
     using System.Collections.Generic;
@@ -58,6 +59,10 @@
                      new ParallelOptions { MaxDegreeOfParallelism = options.ThreadCount },
                      file => { Scrape(options, file); }
                  );
+
+                Logger.Write("\nDisposing of resources...");
+                CacheManager.DisposeAll();
+                Logger.Write("Done!\n");
             }
             catch (Exception e)
             {

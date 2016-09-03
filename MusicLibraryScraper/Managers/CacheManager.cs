@@ -15,15 +15,97 @@
         private static Dictionary<string, Task<AlbumArtResults>> _googleImageUrlCache;
         private static Dictionary<string, Task<FileInfo>> _imageFileCache;
         private static Dictionary<string, Task<FileInfo>> _imageOptimizedFileCache;
+        private static Dictionary<string, ConcurrentImageTask> _imageLoadCache;
+        private static Dictionary<string, ImageOptimizeWithoutFileTask> _imageOptimizedCache;
+        private static Dictionary<string, ImageDownloadWithoutFileTask> _imageDownloadedCache;
+
+
         private static object _imageFileCacheLock = new object();
         private static object _googleImageUrlCacheLock = new object();
         private static object _imageUrlCacheLock = new object();
         private static object _imageLoadCacheLock = new object();
         private static object _imageOptimizedFileCacheLock = new object();
+        private static object _imageOptimizedCacheLock = new object();
+        private static object _imageDownloadedCacheLock = new object();
+
+
         private static ulong _imageCacheSize = 0;
         private const ulong MAX_SIZE = 100000000; // 100MB
         private static SortedList<long, string> _imageLoadCacheHistory;
-        private static Dictionary<string, Task<Image>> _imageLoadCache;
+
+        public static void DisposeAll()
+        {
+
+            lock (_imageLoadCacheLock)
+            {
+                if (_imageLoadCache != null)
+                {
+                    foreach (var key in _imageLoadCache?.Keys)
+                    {
+                        _imageLoadCache[key].Result.Dispose();
+                        _imageLoadCache[key].Dispose();
+                    }
+                    _imageLoadCache.Clear();
+                    _imageLoadCache = null;
+                }
+            }
+
+            lock (_imageOptimizedCacheLock)
+            {
+                if (_imageOptimizedCache != null)
+                {
+                    foreach (var key in _imageOptimizedCache.Keys)
+                    {
+                        _imageOptimizedCache[key].Dispose();
+                    }
+                    _imageOptimizedCache.Clear();
+                    _imageOptimizedCache = null;
+                }
+            }
+
+
+            lock (_imageDownloadedCacheLock)
+            {
+                if (_imageDownloadedCache != null)
+                {
+                    foreach (var key in _imageDownloadedCache.Keys)
+                    {
+                        _imageDownloadedCache[key].Dispose();
+                    }
+                    _imageDownloadedCache.Clear();
+                    _imageDownloadedCache = null;
+                }
+            }
+
+            lock (_imageUrlCacheLock)
+            {
+                if (_imageUrlCache != null)
+                    _imageUrlCache.Clear();
+                _imageUrlCache = null;
+            }
+
+            lock (_googleImageUrlCacheLock)
+            {
+                if (_googleImageUrlCache != null)
+                    _googleImageUrlCache.Clear();
+                _googleImageUrlCache = null;
+            }
+
+            lock (_imageFileCacheLock)
+            {
+                if (_imageFileCache != null)
+                    _imageFileCache.Clear();
+                _imageFileCache = null;
+            }
+
+            lock (_imageOptimizedFileCacheLock)
+            {
+                if (_imageOptimizedFileCache != null)
+                    _imageOptimizedFileCache.Clear();
+                _imageOptimizedFileCache = null;
+            }
+        }
+
 
         private static string store(string s, string s2)
         {
@@ -52,7 +134,92 @@
             }
         }
 
-        public static Task<Image> GetLoadedImage(FileInfo image)
+        public static ConcurrentImageTask GetOptimizedImage(string url, Image image)
+        {
+            lock (_imageOptimizedCacheLock)
+            {
+                if (_imageOptimizedCache == null)
+                {
+                    _imageOptimizedCache = new Dictionary<string, ImageOptimizeWithoutFileTask>();
+                }
+
+                if (_imageOptimizedCache.ContainsKey(url))
+                {
+                    return _imageOptimizedCache[url].Task;
+                }
+                else
+                {
+                    var task = new ImageOptimizeWithoutFileTask(image);
+                    _imageOptimizedCache.Add(url, task);
+                    return task.Task;
+                }
+            }
+        }
+
+        private static void CleanupImageCache()
+        {
+            // TODO
+            //while (_imageCacheSize >= MAX_SIZE * 0.0)
+            //{
+            //    var firstTime = _imageLoadCacheHistory.Keys[0];
+            //    var firstImage = _imageLoadCacheHistory[firstTime];
+            //    var task2 = _imageLoadCache[firstImage];
+            //    var size2 = (ulong)(new FileInfo(_imageLoadCacheHistory[firstTime])).Length;
+
+            //    if (task2.IsCompleted)
+            //    {
+            //        _imageLoadCache.Remove(firstImage);
+            //        _imageLoadCacheHistory.Remove(firstTime);
+            //        _imageCacheSize -= size2;
+            //        //try { task2.Dispose(); } catch { /* Someone's using this still */ }
+            //    }
+            //    else
+            //    {
+            //        _imageLoadCacheHistory.Remove(firstTime);
+            //        AddToLoadImageCache(firstImage);
+            //    }
+            //}
+        }
+
+
+        public static ConcurrentImageTask GetAlbumImage(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentNullException($"Tried to download image with NULL url.");
+            }
+
+            lock (_imageDownloadedCacheLock)
+            {
+                if (_imageDownloadedCache == null)
+                {
+                    _imageDownloadedCache = new Dictionary<string, ImageDownloadWithoutFileTask>();
+                }
+
+                if (_imageDownloadedCache.ContainsKey(url))
+                {
+                    return _imageDownloadedCache[url].Task;
+                }
+                else
+                {
+                    // Logger.WriteLineS("Creating task with key: " + url);
+                    var task = new ImageDownloadWithoutFileTask(url);
+                    _imageDownloadedCache.Add(url, task);
+                    //AddToLoadImageCache(url);
+                    //_imageCacheSize += (ulong)MAX_SIZE / 1000; // hold onto 1000 most recent tasks
+
+                    // TODO
+                    //if (_imageCacheSize >= MAX_SIZE)
+                    //{
+                    //    CleanupImageCache();
+                    //}
+
+                    return task.Task;
+                }
+            }
+        }
+
+        public static ConcurrentImageTask GetLoadedImage(FileInfo image)
         {
             lock (_imageLoadCacheLock)
             {
@@ -62,7 +229,7 @@
                 }
                 if (_imageLoadCache == null)
                 {
-                    _imageLoadCache = new Dictionary<string, Task<Image>>();
+                    _imageLoadCache = new Dictionary<string, ConcurrentImageTask>();
                 }
 
                 if (_imageLoadCache.ContainsKey(image.FullName))
@@ -73,32 +240,14 @@
                 {
                     var task = new ImageLoadTask(image);
                     _imageLoadCache.Add(image.FullName, task);
-                    AddToLoadImageCache(image.FullName);
-                     _imageCacheSize += (ulong)image.Length;
+                    //AddToLoadImageCache(image.FullName);
+                    // _imageCacheSize += (ulong)image.Length;
 
-                    if (_imageCacheSize >= MAX_SIZE)
-                    {
-                        while (_imageCacheSize >= MAX_SIZE * 0.70)
-                        {
-                            var firstTime = _imageLoadCacheHistory.Keys[0];
-                            var firstImage = _imageLoadCacheHistory[firstTime];
-                            var task2 = _imageLoadCache[firstImage];
-                            var size2 = (ulong)(new FileInfo(_imageLoadCacheHistory[firstTime])).Length;
-
-                            if (task2.IsCompleted)
-                            {
-                                _imageLoadCache.Remove(firstImage);
-                                _imageLoadCacheHistory.Remove(firstTime);
-                                _imageCacheSize -= size2;
-                                //try { task2.Dispose(); } catch { /* Someone's using this still */ }
-                            }
-                            else
-                            {
-                                _imageLoadCacheHistory.Remove(firstTime);
-                                AddToLoadImageCache(firstImage);
-                            }
-                        }
-                    }
+                    // TODO
+                    //if (_imageCacheSize >= MAX_SIZE)
+                    //{
+                    //    CleanupImageCache();
+                    //}
                     return task;
                 }
             }
@@ -197,7 +346,7 @@
                 else
                 {
                     // Logger.WriteLineS("Creating task with key: " + url);
-                    var task = new ImageTask(url, dir, filetype);
+                    var task = new ImageDownloadTask(url, dir, filetype);
                     _imageFileCache.Add(url, task);
                     return task;
                 }

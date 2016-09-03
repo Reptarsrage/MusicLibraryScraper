@@ -76,9 +76,10 @@
     <Compile Include="Modals\GoogleResult.cs" />
     <Compile Include="Modals\GoogleResults.cs" />
     <Compile Include="Managers\TaskManager.cs" />
+    <Compile Include="Tasks\ConcurrentImageTask.cs" />
     <Compile Include="Tasks\ImageLoadTask.cs" />
     <Compile Include="Tasks\ImageOptimizeTask.cs" />
-    <Compile Include="Tasks\ImageTask.cs" />
+    <Compile Include="Tasks\ImageDownloadTask.cs" />
     <Compile Include="Tasks\GoogleImageUrlTask.cs" />
     <Compile Include="Tasks\ImageUrlTask.cs" />
     <Compile Include="Logger.cs" />

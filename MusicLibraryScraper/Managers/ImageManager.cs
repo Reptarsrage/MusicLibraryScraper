@@ -41,7 +41,7 @@
             }
         }
 
-        public Image ConvertImagetoQuality(Image image, int quality, out long newSize)
+        public Image ConvertImagetoQuality(Image image, int quality, out long newSize, ref MemoryStream ms)
         {
             ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
 
@@ -57,13 +57,9 @@
             EncoderParameters myEncoderParameters = new EncoderParameters(1);
             EncoderParameter myEncoderParameter = new EncoderParameter(qualityEncoder, 50L);
             myEncoderParameters.Param[0] = myEncoderParameter;
-
-            using (MemoryStream ms = new MemoryStream())
-            {
-                image.Save(ms, jpgEncoder, myEncoderParameters);
-                newSize = ms.Length;
-                return Image.FromStream(ms);
-            }
+            image.Save(ms, jpgEncoder, myEncoderParameters);
+            newSize = ms.Length;
+            return Image.FromStream(ms);
         }
 
         public FileInfo SaveImageWithQuality(Image image, string directory, string filename, int quality)

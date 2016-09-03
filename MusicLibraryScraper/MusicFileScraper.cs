@@ -72,11 +72,7 @@
                 {
                     url = result?.Url ?? null;
                     fileType = result?.ImageType ?? ""; // leave blank and let mime type decide
-                    if (url != null &&
-                        (art = DownloadImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null && // Downloaded art
-                        ((art = OptimizeImage(art, options.OptimizedImageOutDir)) != null)  &&                                                        // Optimize art
-                        (albumArt = LoadImage(art)) != null &&                                                          // Loaded art
-                        TagMusicFile(file, tagLib, albumArt))                                                           // tagged file
+                    if (DownloadOptimizeAndTag(file, url, tagLib, fileType, options, true))
                     {
                         // Success!
                         Logger.IncrementTaskCompleted();
@@ -103,6 +99,43 @@
             Logger.AddFinalFileSize(file.Length);
             Logger.AddTaskTime(watch.ElapsedMilliseconds);
         }
+
+        private bool DownloadOptimizeAndTag(FileInfo file, string url, TagLibUtilities tagLib, string fileType, ScraperArguments options, bool WithoutFiles)
+        {
+            Image downloadedImage = null;
+            Image albumArt = null;
+            FileInfo art;
+            bool result;
+
+            if (WithoutFiles)
+            {
+                result =    (url != null &&
+                            (downloadedImage = DownloadButNotSaveImage(url)) != null &&                // Downloaded art
+                            ((albumArt = OptimizeImageWithoutSave(url, downloadedImage)) != null) &&   // Optimize art
+                            TagMusicFile(file, tagLib, albumArt));                                     // tag file
+            }
+            else
+            {
+                result =    (url != null &&
+                            (art = DownloadImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null && // Downloaded art
+                            ((art = OptimizeImage(art, options.OptimizedImageOutDir)) != null) &&                           // Optimize art
+                            (albumArt = LoadImage(art)) != null &&                                                          // Loaded art
+                            TagMusicFile(file, tagLib, albumArt));                                                          // tagged file
+            }
+
+            if (downloadedImage != null)
+            {
+                downloadedImage.Dispose();
+            }
+
+            if (albumArt != null)
+            {
+                albumArt.Dispose();
+            }
+
+            return result;
+        }
+
 
         /// <summary>
         /// Searches the directory given for all files matching extensions given for music files.
@@ -289,7 +322,7 @@
             if (_taskMan.RunTask(task, $"loading image: {art.FullName}.", false))
             {
                 Logger.WriteLine($"Loaded image {art.FullName}.");
-                return ((ImageLoadTask)task).Result; // Cast is crucial as the result is cloned here but only for the ImageLoadTask subclass.
+                return task.Result; // Cast is crucial as the result is cloned here but only for the ImageLoadTask subclass.
             }
             else
             {
@@ -297,6 +330,29 @@
             }
         }
 
+        private Image DownloadButNotSaveImage(string url)
+        {
+            var task = CacheManager.GetAlbumImage(url);
+
+            if (_taskMan.RunTask(task, $"downoading image: {url}.", false))
+            {
+                return task.Result;
+            }
+
+            return null;
+        }
+
+        private Image OptimizeImageWithoutSave(string url, Image image)
+        {
+            var task = CacheManager.GetOptimizedImage(url, image);
+
+            if (_taskMan.RunTask(task, $"optimizing image: {url}.", false))
+            {
+                return task.Result;
+            }
+
+            return null;
+        }
 
         private FileInfo DownloadImage(string url, string filetype, DirectoryInfo outDir, TagLibUtilities tagLib)
         {
