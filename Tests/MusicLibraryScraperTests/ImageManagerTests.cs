@@ -153,7 +153,10 @@
             using (var resizedTest = _imageMan.ScaleImage(test, 600))
             {
                 long newSize;
-                var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize);
+                MemoryStream stream = new MemoryStream();
+                var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize, ref stream);
+                stream.Close();
+                stream.Dispose();
                 Assert.IsTrue(newSize < testSize);
                 Assert.AreEqual(600, Math.Min(outImage.Width, outImage.Height));
                 Assert.AreEqual(test.Width / test.Height, outImage.Width / outImage.Height);
