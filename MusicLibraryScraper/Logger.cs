@@ -26,6 +26,7 @@ namespace MusicLibraryScraper
 
         private static int _googleRequestCounter = 0;
         private static long _imageDownloadSize = 0;
+        private static long _imageOptimizedSize = 0;
         private static long _origFileSize = 0;
         private static long _finalFileSize = 0;
 
@@ -54,6 +55,13 @@ namespace MusicLibraryScraper
             get
             {
                 return _origFileSize;
+            }
+        }
+        public static long OptimalImageSize
+        {
+            get
+            {
+                return _imageOptimizedSize;
             }
         }
 
@@ -149,6 +157,10 @@ namespace MusicLibraryScraper
         public static void AddOrigionalFileSize(long size)
         {
             Interlocked.Add(ref _origFileSize, size);
+        }
+        public static void AddOptimizedImageSize(long size)
+        {
+            Interlocked.Add(ref _imageOptimizedSize, size);
         }
         public static void AddImageDownloadSize(long size)
         {

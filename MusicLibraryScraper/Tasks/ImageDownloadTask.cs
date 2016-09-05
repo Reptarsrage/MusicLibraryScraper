@@ -48,7 +48,10 @@
                             Logger.WriteSuccess($"Downloaded {url}.");
                             Logger.AddImageDownloadSize(data.Length);
                             stream = new MemoryStream(data);
-                            return Image.FromStream(stream);
+                            var size = stream.Length;
+                            var ret = Image.FromStream(stream);
+                            Logger.AddImageDownloadSize(size);
+                            return ret;
                         }
                         else
                         {

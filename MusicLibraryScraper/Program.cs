@@ -75,6 +75,7 @@
                 Logger.WriteLine($"{Logger.GoogleRequestCounter} google searches made.");
                 Logger.WriteLine($"{Logger.ImageCount} images fetched.");
                 Logger.WriteLine($"{Math.Round(Logger.ImageDownloadSize / 1024.0 / 1024.0, 2)}MB downloaded.");
+                Logger.WriteLine($"{Math.Round(Logger.OptimalImageSize / 1024.0 / 1024.0, 2)}MB of images after optimizing.");
                 Logger.WriteLine($"{Math.Round(Logger.OrigFileSize / 1024.0 / 1024.0, 2)}MB origional files scraped.");
                 Logger.WriteLine($"{Math.Round(Logger.FinalFileSize / 1024.0 / 1024.0, 2)}MB total final files size.");
                 Logger.WriteLine($"{Math.Round(Logger.FinalFileSize / (double)Logger.OrigFileSize, 2)}% total files size increase.");

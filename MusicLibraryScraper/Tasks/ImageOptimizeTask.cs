@@ -4,6 +4,7 @@
     using System;
     using System.Drawing;
     using System.IO;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
 
     class ImageOptimizeWithoutFileTask : IDisposable
@@ -15,13 +16,15 @@
 
         public Image OptimizeImage(Image image)
         {
+            
             var _imageMan = new ImageManager();
             using (var resizedImage = _imageMan.ScaleImage(image, 600))
             {
-                long @out = 0;
+                long newSize = 0;
                 //var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize);
                 this.stream = new MemoryStream();
-                var outImage = _imageMan.ConvertImagetoQuality(resizedImage, 90, out @out, ref stream);
+                var outImage = _imageMan.ConvertImagetoQuality(resizedImage, 90, out newSize, ref stream);
+                Logger.AddOptimizedImageSize(newSize);
                 return outImage;
             }
         }
@@ -80,7 +83,7 @@
             {
                 //var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize);
                 var outFile = _imageMan.SaveImageWithQuality(resizedImage, dir.FullName, Path.GetFileNameWithoutExtension(filename.Name), 90);
-
+                Logger.AddOptimizedImageSize(outFile.Length);
                 return outFile;
             }
         }
