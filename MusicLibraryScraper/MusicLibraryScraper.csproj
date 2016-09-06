@@ -101,6 +101,18 @@
       <DependentUpon>App.config</DependentUpon>
     </None>
     <None Include="packages.config" />
+    <None Include="Resources\library.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\_ctypes.pyd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\_socket.pyd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\_ssl.pyd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\packages\AWSSDK.S3.3.2.6-beta\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
@@ -110,6 +122,14 @@
       <Project>{C3234B14-F371-4985-A44D-521D7637BD63}</Project>
       <Name>AmazonAlbumArtLookup</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GetImageFromGoogle.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\python27.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

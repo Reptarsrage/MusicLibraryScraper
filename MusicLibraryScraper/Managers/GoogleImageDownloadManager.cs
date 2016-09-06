@@ -5,10 +5,11 @@
     using System.Diagnostics;
     using System.IO;
     using System.Net;
+    using System.Reflection;
     using System.Text;
     using System.Xml.Serialization;
 
-    class GoogleImageDownloadManager
+    public class GoogleImageDownloadManager
     {
         private int PROC_TIMOUT = 3000;
 
@@ -43,9 +44,9 @@
             Logger.WriteLine($"Qerying google for {query}");
             using (Process process = new Process())
             {
-                process.StartInfo.FileName = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).FullName).FullName).FullName, @"PythonDownloaderScript\build\dist\GetImageFromGoogle.exe");
+                process.StartInfo.FileName =  Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, @"Resources\GetImageFromGoogle.exe");
                 process.StartInfo.Arguments = query;
-                process.StartInfo.WorkingDirectory = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(Environment.CurrentDirectory).FullName).FullName).FullName, @"PythonDownloaderScript\build\dist\");
+                process.StartInfo.WorkingDirectory = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, @"Resources\");
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
