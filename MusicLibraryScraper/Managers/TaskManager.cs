@@ -11,16 +11,16 @@
 
         }
 
-        public bool RunTask(Task task, string description, bool throttle, bool verbose = true) {
+        public bool RunTask(Task task, string description, bool throttle, RequestThrottler RequestThrottler, bool verbose = true) {
             try
             {
                 if (throttle)
                 {
-                    RequestThrottler.throttleTask(task);
+                    RequestThrottler.ThrottleTask(task);
                 }
                 else
                 {
-                    RequestThrottler.startTaskImmediately(task);
+                    RequestThrottler.StartTaskImmediately(task);
                 }
 
                 while (!task.IsCompleted) { /* Spin spin spin */ Thread.Sleep(100); }

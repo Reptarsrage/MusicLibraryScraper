@@ -1,63 +1,106 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Timers;
-using System.Threading.Tasks;
-
-namespace MusicLibraryScraper
+﻿namespace MusicLibraryScraper
 {
-    static class RequestThrottler
+    using System;
+    using System.Collections.Concurrent;
+    using System.Threading.Tasks;
+    using System.Runtime.InteropServices;
+
+    public class RequestThrottler : IDisposable
     {
-        private static ConcurrentQueue<Task> methodQueue = new ConcurrentQueue<Task>();
-        private static Timer timer;
-        private static object slock;
+        [DllImport("WinMM.dll", SetLastError = true)]
+        private static extern uint timeSetEvent(int msDelay, int msResolution,
+        TimerEventHandler handler, ref int userCtx, int eventType);
 
-        private static void tick(object sender, ElapsedEventArgs e)
+        [DllImport("WinMM.dll", SetLastError = true)]
+        static extern uint timeKillEvent(uint timerEventId);
+
+        private delegate void TimerEventHandler(uint id, uint msg,
+               ref int userCtx, int rsv1, int rsv2);
+
+        private ConcurrentQueue<Task> methodQueue;
+        private object slock = new object();
+        private uint timerId = 0;
+        private TimerEventHandler timerRef;
+        private const int timeout = 100;
+
+        public static int Timeout
         {
-            
-            if (methodQueue.Count > 0)
+            get
             {
-                Task action;
-                if (methodQueue.TryDequeue(out action))
+                return timeout;
+            }
+        }
+
+        public RequestThrottler()
+        {
+            lock (slock)
+            {
+                if (timerId == 0)
                 {
-                    startTask(action);
+                    int userCtx = 0;
+                    timerRef = new TimerEventHandler(DequeTask);
+                    timerId = timeSetEvent(timeout, 10, timerRef, ref userCtx, 1);
+                }
+
+                if (methodQueue == null)
+                {
+                    methodQueue = new ConcurrentQueue<Task>();
                 }
             }
         }
 
-
-        private static void startTask(Task action)
+        public void StartTaskImmediately(Task task)
         {
-            lock (slock) // lock just for starting tasks in case there is ever any overlap
+            StartTask(task);
+        }
+
+        public void ThrottleTask(Task task)
+        {
+            lock (slock)
             {
-                if (action.Status.Equals(TaskStatus.Created))
+                if (timerId == 0)
                 {
-                    //Logger.WriteLine("Starting Task.");
-                    action.Start();
+                    int userCtx = 0;
+                    timerRef = new TimerEventHandler(DequeTask);
+                    timerId = timeSetEvent(timeout, 10, timerRef, ref userCtx, 1);
                 }
-            }
-        }
-
-        public static void startTaskImmediately(Task task)
-        {
-            startTask(task);
-        }
-
-        public static void throttleTask(Task task)
-        {
-            if (timer == null)
-            {
-                timer = new Timer();
-                timer.Interval = 100;
-                timer.Elapsed += tick;
-                timer.Start();
-            }
-
-            if (slock == null)
-            {
-                slock = new object();
             }
 
             methodQueue.Enqueue(task);
+        }
+
+        public void Dispose()
+        {
+            StopInternal();
+        }
+
+        private void DequeTask(uint id, uint msg, ref int userCtx, int rsv1, int rsv2)
+        {
+            Task action;
+            if (methodQueue.TryDequeue(out action))
+            {
+                StartTask(action);
+            }
+        }
+
+        private void StopInternal()
+        {
+            lock (slock)
+            {
+                if (timerId != 0)
+                {
+                    timeKillEvent(timerId);
+                    timerId = 0;
+                }
+            }
+        }
+
+        private void StartTask(Task action)
+        {
+            if (action.Status.Equals(TaskStatus.Created))
+            {
+                action.Start();
+            }
         }
     }
 }

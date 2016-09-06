@@ -14,10 +14,12 @@
     class MusicFileScraper
     {
         private TaskManager _taskMan;
+        private RequestThrottler RequestThrottler;
 
-       public MusicFileScraper()
+       public MusicFileScraper(RequestThrottler RequestThrottler)
         {
-            _taskMan = new TaskManager();
+            this._taskMan = new TaskManager();
+            this.RequestThrottler = RequestThrottler;
         }
 
         #region public methods
@@ -53,7 +55,7 @@
             // Try Amazon first
             var task = CacheManager.GetAlbumImageURL(string.IsNullOrEmpty(albumArtist) ? artist : albumArtist, string.IsNullOrEmpty(album) ? filename : album);
 
-            if (_taskMan.RunTask(task, $"getting album art for music file: ({Path.GetFileNameWithoutExtension(file.FullName)}) using amazon.", true) && 
+            if (_taskMan.RunTask(task, $"getting album art for music file: ({Path.GetFileNameWithoutExtension(file.FullName)}) using amazon.", true, RequestThrottler) && 
                 task.Result != null && task.Result.Results != null)
             {
                 results = task.Result;
@@ -242,7 +244,7 @@
             var task = CacheManager.GetAlbumImageURLUsingGoogle(query);
             
             var description = $"getting album art for music file: ({Path.GetFileNameWithoutExtension(file.FullName)}) using google.";
-            if (_taskMan.RunTask(task, description, true))
+            if (_taskMan.RunTask(task, description, true, RequestThrottler))
             {
                 if (task.Result != null && task.Result.Results != null)
                 {
@@ -299,7 +301,7 @@
             }
 
             var task = CacheManager.GetOptimizedImage(art, dir);
-            if (_taskMan.RunTask(task, $"optimizing image: {art.FullName}.", false))
+            if (_taskMan.RunTask(task, $"optimizing image: {art.FullName}.", false, RequestThrottler))
             {
                 Logger.WriteLine($"Optimized image {art.FullName}.");
                 return ((ImageOptimizeTask)task).Result;
@@ -319,7 +321,7 @@
             }
 
             var task = CacheManager.GetLoadedImage(art);
-            if (_taskMan.RunTask(task, $"loading image: {art.FullName}.", false))
+            if (_taskMan.RunTask(task, $"loading image: {art.FullName}.", false, RequestThrottler))
             {
                 Logger.WriteLine($"Loaded image {art.FullName}.");
                 return task.Result; // Cast is crucial as the result is cloned here but only for the ImageLoadTask subclass.
@@ -334,7 +336,7 @@
         {
             var task = CacheManager.GetAlbumImage(url);
 
-            if (_taskMan.RunTask(task, $"downoading image: {url}.", false))
+            if (_taskMan.RunTask(task, $"downoading image: {url}.", false, RequestThrottler))
             {
                 return task.Result;
             }
@@ -346,7 +348,7 @@
         {
             var task = CacheManager.GetOptimizedImage(url, image);
 
-            if (_taskMan.RunTask(task, $"optimizing image: {url}.", false))
+            if (_taskMan.RunTask(task, $"optimizing image: {url}.", false, RequestThrottler))
             {
                 return task.Result;
             }
@@ -358,7 +360,7 @@
         {
             var task = CacheManager.GetAlbumImageFile(url, filetype, outDir);
 
-            if (_taskMan.RunTask(task, $"downoading image: {url}.", false))
+            if (_taskMan.RunTask(task, $"downoading image: {url}.", false, RequestThrottler))
             {
                 return task.Result;
             }
