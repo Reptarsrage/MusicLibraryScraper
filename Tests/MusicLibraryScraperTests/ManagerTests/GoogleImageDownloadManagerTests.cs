@@ -62,5 +62,36 @@
                 Assert.DoesNotThrow(() => new Uri(result.Url), "Result URL can be resolved.");
             }
         }
+
+        [Test]
+        [Category("GoogleImageDownloadManagerTests")]
+        public void GoogleQueryLoadTest()
+        {
+            var list = new List<Tuple<string, string>>();
+            for (int i = 0; i < 50; i++)
+            {
+                list.Add(new Tuple<string, string>("Anti", "Rihanna"));
+            }
+
+            var result = Parallel.ForEach(
+                list, 
+                new ParallelOptions { MaxDegreeOfParallelism = 4 }, 
+                tuple =>
+            {
+                Task<bool> task = Task.Factory.StartNew(() =>
+                {
+                    var results = _manager.GetGoogleResults($"{tuple.Item1} by {tuple.Item2}");
+                    bool good = results != null;
+                    good &= results.Results.Count > 0;
+                    good &= !string.IsNullOrEmpty(results.Results[0]?.Url ?? null);
+                    return good;
+                });
+
+                Assert.IsTrue(task.Wait(30000), "Timed out getting response from Google.");
+                Assert.IsTrue(task.Result, "Error getting response from Google.");
+            });
+
+            Assert.IsTrue(result.IsCompleted);
+        }
     }
 }
