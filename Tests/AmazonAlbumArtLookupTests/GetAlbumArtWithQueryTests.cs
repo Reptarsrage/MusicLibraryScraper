@@ -7,11 +7,11 @@
     /// Summary description for AlbumArtLookupTests
     /// </summary>
     [TestFixture]
-    public class GetAlbumArtWithQuery
+    public class GetAlbumArtWithQueryTests
     {
         private AlbumArtLookup _amazonLookup;
 
-        public GetAlbumArtWithQuery()
+        public GetAlbumArtWithQueryTests()
         {
             _amazonLookup = new AlbumArtLookup();
         }

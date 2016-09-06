@@ -18,7 +18,7 @@
         DirectoryInfo path;
         Dictionary<string, Tuple<Image, long>> _preLoadedImages;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void ImageManagerTestsSetUp()
         {
             _imageMan = new ImageManager();
@@ -48,7 +48,7 @@
             }
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void ImageManagerTestsTesrDown()
         {
             foreach (var tuple in _preLoadedImages.Values)

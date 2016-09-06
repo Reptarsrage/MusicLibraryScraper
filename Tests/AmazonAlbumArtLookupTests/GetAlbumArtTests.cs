@@ -10,11 +10,11 @@
     /// Summary description for AlbumArtLookupTests
     /// </summary>
     [TestFixture]
-    public class GetAlbumArt
+    public class GetAlbumArtTests
     {
         private AlbumArtLookup _amazonLookup;
 
-        public GetAlbumArt()
+        public GetAlbumArtTests()
         {
             _amazonLookup = new AlbumArtLookup();
         }
@@ -85,7 +85,10 @@
                 list.Add(new Tuple<string, string>("Anti", "Rihanna"));
             }
 
-            var result = Parallel.ForEach(list, (tuple) =>
+            var result = Parallel.ForEach(
+                list,
+                new ParallelOptions { MaxDegreeOfParallelism = 16 },
+                tuple =>
             {
                 Task<bool> task = Task.Factory.StartNew(() =>
                 {

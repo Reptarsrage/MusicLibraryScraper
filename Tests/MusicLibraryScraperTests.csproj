@@ -85,9 +85,13 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="AmazonAlbumArtLookupTests\GetAlbumArtWithQuery.cs" />
-    <Compile Include="AmazonAlbumArtLookupTests\GetAlbumArt.cs" />
-    <Compile Include="MusicLibraryScraperTests\ImageManagerTests.cs" />
+    <Compile Include="AmazonAlbumArtLookupTests\GetAlbumArtWithQueryTests.cs" />
+    <Compile Include="AmazonAlbumArtLookupTests\GetAlbumArtTests.cs" />
+    <Compile Include="MusicLibraryScraperTests\ManagerTests\GoogleImageDownloadManagerTests.cs" />
+    <Compile Include="MusicLibraryScraperTests\ManagerTests\CacheManagerTests.cs" />
+    <Compile Include="MusicLibraryScraperTests\RequestThrottlerTests.cs" />
+    <Compile Include="MusicLibraryScraperTests\ManagerTests\TaskManagerTests.cs" />
+    <Compile Include="MusicLibraryScraperTests\ManagerTests\ImageManagerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -101,6 +105,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="MusicLibraryScraperTests\TaskTests\" />
     <Folder Include="PythonDownloaderScriptTests\" />
   </ItemGroup>
   <ItemGroup>
@@ -112,8 +117,26 @@
       <DependentUpon>App.config</DependentUpon>
     </None>
     <None Include="packages.config" />
+    <None Include="Resources\library.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\_ctypes.pyd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\_socket.pyd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\_ssl.pyd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\GetImageFromGoogle.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\python27.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="Resources\test_png.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
