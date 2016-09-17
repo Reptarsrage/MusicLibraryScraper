@@ -2,9 +2,8 @@
 {
     using Managers;
     using System.IO;
-    using System.Threading.Tasks;
 
-    class ImageOptimizeTask : Task<FileInfo>
+    class ImageOptimizeTask : BaseTask<FileInfo>
     {
         public static FileInfo OptimizeImage(FileInfo filename, DirectoryInfo dir) {
             var _imageMan = new ImageManager();

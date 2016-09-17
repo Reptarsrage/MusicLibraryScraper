@@ -5,9 +5,8 @@
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
-    using System.Threading.Tasks;
 
-    class ImageDownloadTask : Task<FileInfo>
+    class ImageDownloadTask : BaseTask<FileInfo>
     {
         public static FileInfo GetAlbumImage(string url, DirectoryInfo dir, string ext = "png", int tries = 0) {
             Logger.WriteLine($"Fetching image at {url}");

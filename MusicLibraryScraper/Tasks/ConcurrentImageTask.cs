@@ -1,12 +1,9 @@
-﻿
-
-namespace MusicLibraryScraper.Tasks
+﻿namespace MusicLibraryScraper.Tasks
 {
     using System;
     using System.Drawing;
-    using System.Threading.Tasks;
 
-    public class ConcurrentImageTask : Task<Image>
+    public class ConcurrentImageTask : BaseTask<Image>
     {
         private object lockMe;
 

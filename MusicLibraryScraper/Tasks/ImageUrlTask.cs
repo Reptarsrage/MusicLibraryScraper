@@ -3,7 +3,7 @@
     using Modals;
     using System.Threading.Tasks;
 
-    class ImageUrlTask : Task<AlbumArtResults>
+    class ImageUrlTask : BaseTask<AlbumArtResults>
     {
 
         public static AlbumArtResults GetAlbumImageURL(string artist, string album) {

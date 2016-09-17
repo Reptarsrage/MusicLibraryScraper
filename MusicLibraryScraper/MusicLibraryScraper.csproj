@@ -76,6 +76,7 @@
     <Compile Include="Modals\GoogleResult.cs" />
     <Compile Include="Modals\GoogleResults.cs" />
     <Compile Include="Managers\TaskManager.cs" />
+    <Compile Include="Tasks\BaseTask.cs" />
     <Compile Include="Tasks\ConcurrentImageTask.cs" />
     <Compile Include="Tasks\ImageDownloadWithoutFileTask.cs" />
     <Compile Include="Tasks\ImageLoadTask.cs" />

@@ -2,9 +2,8 @@
 {
     using Managers;
     using Modals;
-    using System.Threading.Tasks;
 
-    class GoogleImageUrlTask : Task<AlbumArtResults>
+    class GoogleImageUrlTask : BaseTask<AlbumArtResults>
     {
 
         public static AlbumArtResults GetAlbumImageURL(string query) {
