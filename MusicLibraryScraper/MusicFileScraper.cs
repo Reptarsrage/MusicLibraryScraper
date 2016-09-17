@@ -15,11 +15,13 @@
     {
         private TaskManager _taskMan;
         private RequestThrottler RequestThrottler;
+        private CacheManager CacheManager;
 
-       public MusicFileScraper(RequestThrottler RequestThrottler)
+       public MusicFileScraper(RequestThrottler RequestThrottler, CacheManager CacheManager)
         {
             this._taskMan = new TaskManager();
             this.RequestThrottler = RequestThrottler;
+            this.CacheManager = CacheManager;
         }
 
         #region public methods

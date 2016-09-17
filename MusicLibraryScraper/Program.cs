@@ -30,7 +30,8 @@
 
                 // Initialize
                 RequestThrottler throttler = new RequestThrottler();
-                MusicFileScraper scraper = new MusicFileScraper(throttler);
+                CacheManager CacheManager = new CacheManager();
+                MusicFileScraper scraper = new MusicFileScraper(throttler, CacheManager);
                 _files = scraper.DirSearch(options);
 
                 //Copy files to final dest
@@ -58,11 +59,11 @@
                 Parallel.ForEach(
                      _files,
                      new ParallelOptions { MaxDegreeOfParallelism = options.ThreadCount },
-                     file => { Scrape(options, file, throttler); }
+                     file => { Scrape(options, file, throttler, CacheManager); }
                  );
 
                 Logger.Write("\nDisposing of resources...");
-                CacheManager.DisposeAll();
+                CacheManager.Dispose();
                 Logger.Write("Done!\n");
             }
             catch (Exception e)
@@ -92,11 +93,11 @@
             }
         }
 
-        private static void Scrape(ScraperArguments options, FileInfo file, RequestThrottler throttler) {
+        private static void Scrape(ScraperArguments options, FileInfo file, RequestThrottler throttler, CacheManager CacheManager) {
             try
             {
 
-                var scraper = new MusicFileScraper(throttler);
+                var scraper = new MusicFileScraper(throttler, CacheManager);
                 scraper.Scrape(options, file);
             }
             catch (Exception e)
