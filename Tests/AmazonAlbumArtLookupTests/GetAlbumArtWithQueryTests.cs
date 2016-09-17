@@ -17,6 +17,7 @@
         }
 
         [Test]
+        [Category("AlbumArtWithQueryTests")]
         [TestCase("Cage the Elephant")]
         [TestCase("We were dead before the ship even sank")]
         [TestCase("Modest Mouse")]
@@ -30,6 +31,7 @@
         }
 
         [Test]
+        [Category("AlbumArtWithQueryTests")]
         [TestCase("Cage the Elephant")]
         [TestCase("We were dead before the ship even sank")]
         [TestCase("Modest Mouse")]
@@ -51,6 +53,7 @@
         }
 
         [Test]
+        [Category("AlbumArtWithQueryTests")]
         [TestCase(null)]
         [TestCase("")]
         [TestCase("!@#NGFNFGH&*I*OTGQREFWV#@")]

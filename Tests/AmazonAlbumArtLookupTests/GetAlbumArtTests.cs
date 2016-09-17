@@ -10,16 +10,17 @@
     /// Summary description for AlbumArtLookupTests
     /// </summary>
     [TestFixture]
-    public class GetAlbumArtTests
+    public class GetAlbumArtLookupTests
     {
         private AlbumArtLookup _amazonLookup;
 
-        public GetAlbumArtTests()
+        public GetAlbumArtLookupTests()
         {
             _amazonLookup = new AlbumArtLookup();
         }
 
         [Test]
+        [Category("AlbumArtLookupTests")]
         [TestCase("Cage the Elephant", "Cage The Elephant")]
         [TestCase("We were dead before the ship even sank", "")]
         [TestCase("", "Modest Mouse")]
@@ -33,6 +34,7 @@
         }
 
         [Test]
+        [Category("AlbumArtLookupTests")]
         [TestCase("Cage the Elephant", "Cage The Elephant")]
         [TestCase("We were dead before the ship even sank", "")]
         [TestCase("", "Modest Mouse")]
@@ -54,6 +56,7 @@
         }
 
         [Test]
+        [Category("AlbumArtLookupTests")]
         [TestCase(null, "Cage The Elephant")]
         [TestCase("We were dead before the ship even sank", null)]
         [TestCase(null, null)]
@@ -66,6 +69,7 @@
         }
 
         [Test]
+        [Category("AlbumArtLookupTests")]
         [TestCase("Cage the Elephant", "Cage The Elephant", "Cage the Elephant", "Cage the Elephant")]
         [TestCase("We were dead  before the ship even   sank", "", "We Were Dead Before The Ship Even Sank", "Modest Mouse")]
         [TestCase("Americana", "The  Offspring", "Americana", "The Offspring")]
@@ -77,6 +81,7 @@
         }
 
         [Test]
+        [Category("AlbumArtLookupTests")]
         public void AlbumArtLookupLoadTest()
         {
             var list = new List<Tuple<string, string>>();
