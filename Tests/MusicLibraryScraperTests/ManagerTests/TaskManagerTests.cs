@@ -3,10 +3,6 @@
     using NUnit.Framework;
     using MusicLibraryScraper.Managers;
     using System.Collections.Generic;
-    using System;
-    using System.IO;
-    using System.Reflection;
-    using System.Drawing;
     using System.Collections.Concurrent;
     using System.Threading.Tasks;
     using System.Diagnostics;
@@ -19,58 +15,119 @@
     [TestFixture]
     public class TaskManagerTests
     {
-        ConcurrentStack<long> _stack;
-        RequestThrottler throttler;
+        ConcurrentQueue<long> _queue;
+        RequestThrottler _throttler;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void TaskManagerTestsSetUp()
         {
-            _stack = new ConcurrentStack<long>();
-             throttler = new RequestThrottler();
+            _queue = new ConcurrentQueue<long>();
+            _throttler = new RequestThrottler();
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TaskManagerTestsTearDown()
         {
-            _stack.Clear();
-            _stack = null;
-            throttler.Dispose();
-            throttler = null;
+            _throttler.Dispose();
+            _throttler = null;
+            _queue = null;
         }
 
         [Test]
         [Category("TaskManagerTests")]
         public void TaskManagerThrottleTest()
         {
-            int numTasks = 32;
+            int numTasks = 100;
             var tasks = new List<Task>();
             var watch = new Stopwatch();
             watch.Start();
             for (int i = 0; i < numTasks; i++)
             {
-                tasks.Add(new Task(() =>
+                tasks.Add(new Task(() => _queue.Enqueue(watch.ElapsedMilliseconds), TaskCreationOptions.LongRunning));
+            }
+
+            Parallel.ForEach(tasks, new ParallelOptions { MaxDegreeOfParallelism = 16 },
+                task =>
                 {
-                    _stack.Push(watch.ElapsedMilliseconds);
-                }));
+                    var manager = new TaskManager();
+                    Assert.IsTrue(manager.RunTask(task, "TEST", true, _throttler, false), "Failed to run task.");
+                });
+
+            watch.Stop();
+            Assert.IsTrue(_queue.Count == numTasks);
+            long ticks = 0;
+            int count = 1;
+            while (_queue.Count > 0)
+            {
+                _queue.TryDequeue(out ticks);
+                Assert.GreaterOrEqual(ticks + 5L, RequestThrottler.Timeout * count); // always greater or equal to the throtteling (within 5ms)
+                count++;
+            }
+        }
+
+        [Test]
+        [Category("TaskManagerTests")]
+        public void TaskManagerThrottleSleepyTest()
+        {
+            int numTasks = 100;
+            var tasks = new List<Task>();
+            var watch = new Stopwatch();
+            watch.Start();
+            for (int i = 0; i < numTasks; i++)
+            {
+                tasks.Add(new Task(() => {
+                    _queue.Enqueue(watch.ElapsedMilliseconds);
+                    Thread.Sleep(555);
+                }, TaskCreationOptions.LongRunning));
             }
 
             Parallel.ForEach(tasks,
-                task => {
-                    throttler.ThrottleTask(task);
+                task =>
+                {
+                    var manager = new TaskManager();
+                    Assert.IsTrue(manager.RunTask(task, "TEST", true, _throttler, false), "Failed to run task.");
+                    Thread.Sleep(55);
                 });
 
-            while (!SpinWait.SpinUntil(() => { return _stack.Count == numTasks; }, 100)) { }
+            watch.Stop();
+            Assert.IsTrue(_queue.Count == numTasks);
+            long ticks = 0;
+            int count = 1;
+            while (_queue.Count > 0)
+            {
+                _queue.TryDequeue(out ticks);
+                Assert.GreaterOrEqual(ticks + 5L, RequestThrottler.Timeout * count); // always greater or equal to the throtteling (within 5ms)
+                count++;
+            }
+        }
+
+        [Test]
+        [Category("TaskManagerTests")]
+        public void TaskManagerNoThrottleTest()
+        {
+            int numTasks = 20;
+            var tasks = new List<Task>();
+            var watch = new Stopwatch();
+            watch.Start();
+            for (int i = 0; i < numTasks; i++)
+            {
+                tasks.Add(new Task(() => _queue.Enqueue(watch.ElapsedMilliseconds), TaskCreationOptions.LongRunning));
+            }
+
+            Parallel.ForEach(tasks,
+                task =>
+                {
+                    var manager = new TaskManager();
+                    Assert.IsTrue(manager.RunTask(task, "TEST", false, _throttler, false), "Failed to run task.");
+                });
 
             watch.Stop();
-            Assert.IsTrue(_stack.Count == numTasks);
+            Assert.IsTrue(_queue.Count == numTasks);
             long ticks = 0;
-            long ticks2;
-            _stack.TryPop(out ticks);
-            while (_stack.Count > 0)
+            while (_queue.Count > 0)
             {
-                _stack.TryPop(out ticks2);
-                Assert.GreaterOrEqual(ticks - ticks2, 95);
-                ticks = ticks2;
+                _queue.TryDequeue(out ticks);
+                Assert.Less(ticks, 30000, "Thread Timed out"); // timeout
             }
         }
     }

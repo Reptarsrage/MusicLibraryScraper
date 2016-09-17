@@ -92,6 +92,15 @@
                     timeKillEvent(timerId);
                     timerId = 0;
                 }
+
+                if (methodQueue != null)
+                {
+                    Task o = null;
+                    while (methodQueue.Count > 0 && methodQueue.TryDequeue(out o)) {
+                        o.Dispose();
+                    }
+                    methodQueue = null;
+                }
             }
         }
 

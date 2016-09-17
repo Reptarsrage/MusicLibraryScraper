@@ -8,7 +8,6 @@
     {
         public TaskManager()
         {
-
         }
 
         public bool RunTask(Task task, string description, bool throttle, RequestThrottler RequestThrottler, bool verbose = true) {
@@ -23,7 +22,12 @@
                     RequestThrottler.StartTaskImmediately(task);
                 }
 
-                while (!task.IsCompleted) { /* Spin spin spin */ Thread.Sleep(100); }
+                bool finished = task.IsCompleted;
+                while (!SpinWait.SpinUntil(() => finished, 100))
+                {
+                    /* Spin spin spin */
+                    finished = task.IsCompleted;
+                }
 
                 if (task.IsFaulted)
                 {

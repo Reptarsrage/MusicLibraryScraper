@@ -14,60 +14,124 @@
     [TestFixture]
     public class RequestThrottlerTests
     {
-        ConcurrentStack<long> _stack;
+        ConcurrentQueue<long> _queue;
         RequestThrottler throttler;
 
-        [TestFixtureSetUp]
+        [SetUp]
         public void TaskManagerTestsSetUp()
         {
-            _stack = new ConcurrentStack<long>();
+            _queue = new ConcurrentQueue<long>();
              throttler = new RequestThrottler();
         }
 
-        [TestFixtureTearDown]
+        [TearDown]
         public void TaskManagerTestsTearDown()
         {
-            _stack.Clear();
-            _stack = null;
+            _queue = null;
             throttler.Dispose();
             throttler = null;
         }
 
         [Test]
         [Category("RequestThrottlerTests")]
-        public void TaskManagerThrottleTest()
+        public void RequestThrottlerTest()
         {
             int numTasks = 100;
             var tasks = new List<Task>();
             var watch = new Stopwatch();
             watch.Start();
+
             for (int i = 0; i < numTasks; i++)
             {
-                tasks.Add(new Task(() =>
-                {
-                    _stack.Push(watch.ElapsedMilliseconds);
-                }));
+                tasks.Add(new Task(() => _queue.Enqueue(watch.ElapsedMilliseconds), TaskCreationOptions.LongRunning));
             }
 
-            Parallel.ForEach(tasks,
-                task => {
-                    throttler.ThrottleTask(task);
-                });
+            Parallel.ForEach(tasks, task => throttler.ThrottleTask(task));
 
-            while (!SpinWait.SpinUntil(() => {return _stack.Count == numTasks;}, 100)) {
+            while (!SpinWait.SpinUntil(() => ( _queue.Count == numTasks), 100)) {
                 Assert.LessOrEqual(watch.ElapsedMilliseconds, 30000, "Timed out.");
             }
 
             watch.Stop();
-            Assert.IsTrue(_stack.Count == numTasks);
+            Assert.IsTrue(_queue.Count == numTasks);
             long ticks = 0;
-            long ticks2;
-            _stack.TryPop(out ticks);
-            while (_stack.Count > 0)
+            int count = 1;
+            while (_queue.Count > 0)
             {
-                _stack.TryPop(out ticks2);
-                Assert.GreaterOrEqual(ticks - ticks2, RequestThrottler.Timeout * 0.95d); // within 5% error margin
-                ticks = ticks2;
+                _queue.TryDequeue(out ticks);
+                Assert.GreaterOrEqual(ticks + 5L, RequestThrottler.Timeout * count); // always greater or equal to the throtteling (within 5ms)
+                count++;
+            }
+        }
+
+        [Test]
+        [Category("RequestThrottlerTests")]
+        public void RequestThrottlerSleepyTest()
+        {
+            int numTasks = 100;
+            var tasks = new List<Task>();
+            var watch = new Stopwatch();
+            watch.Start();
+
+            for (int i = 0; i < numTasks; i++)
+            {
+                tasks.Add(new Task(() => {
+                    
+                    _queue.Enqueue(watch.ElapsedMilliseconds);
+                    Thread.Sleep(1001);
+                }, TaskCreationOptions.LongRunning));
+            }
+
+            Parallel.ForEach(tasks, task => {
+                throttler.ThrottleTask(task);
+                Thread.Sleep(55);
+            });
+
+            while (!SpinWait.SpinUntil(() => (_queue.Count == numTasks), 100))
+            {
+                Assert.LessOrEqual(watch.ElapsedMilliseconds, 60000, "Timed out.");
+            }
+
+            watch.Stop();
+            Assert.IsTrue(_queue.Count == numTasks);
+            long ticks = 0;
+            int count = 1;
+            while (_queue.Count > 0)
+            {
+                _queue.TryDequeue(out ticks);
+                Assert.GreaterOrEqual(ticks + 5L, RequestThrottler.Timeout * count); // always greater or equal to the throtteling (within 5ms)
+                count++;
+            }
+        }
+
+        [Test]
+        [Category("RequestThrottlerTests")]
+        public void StartImmediatelyTest()
+        {
+            int numTasks = 20;
+            var tasks = new List<Task>();
+            var watch = new Stopwatch();
+            watch.Start();
+            for (int i = 0; i < numTasks; i++)
+            {
+                tasks.Add(new Task(() => _queue.Enqueue(watch.ElapsedMilliseconds), TaskCreationOptions.LongRunning));
+            }
+
+            Parallel.ForEach(tasks,
+                task => throttler.StartTaskImmediately(task));
+
+            while (!SpinWait.SpinUntil(() => (_queue.Count == numTasks), 100))
+            {
+                Assert.LessOrEqual(watch.ElapsedMilliseconds, 30000, "Timed out.");
+            }
+
+            watch.Stop();
+            Assert.IsTrue(_queue.Count == numTasks);
+            long ticks = 0;
+            while (_queue.Count > 0)
+            {
+                _queue.TryDequeue(out ticks);
+                Assert.Less(ticks, 30000, "Thread timed out"); // always less than throtteling
             }
         }
     }
