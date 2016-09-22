@@ -12,6 +12,7 @@
             try
             {
                 Image ret = Image.FromFile(image.FullName); // can fail if corrupt image or invalid pixel format, will fail with OOM Exception
+                Logger.IncrementLoadedImageCount();
                 return ret;
             }
             catch (OutOfMemoryException e)

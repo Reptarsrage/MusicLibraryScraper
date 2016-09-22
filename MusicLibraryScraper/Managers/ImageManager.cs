@@ -8,12 +8,15 @@
 
     public class ImageManager
     {
-        public Image ScaleImage(Image image, int size)
+        public static double MinSize { get { return MIN_SIZE; } }
+        private const double MIN_SIZE = 600.00d;
+
+        public Image ScaleImage(Image image, double size)
         {
             var width = image.Width;
             var height = image.Height;
 
-            var ratio = width < height ? 600.00 / width: 600.00 / height;
+            var ratio = width < height ? MIN_SIZE / width: MIN_SIZE / height;
             var newWidth = (int)(ratio * width);
             var newHeight = (int)(ratio * height);
 

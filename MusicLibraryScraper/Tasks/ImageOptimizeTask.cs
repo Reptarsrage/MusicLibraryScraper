@@ -8,7 +8,7 @@
         public static FileInfo OptimizeImage(FileInfo filename, DirectoryInfo dir) {
             var _imageMan = new ImageManager();
             using (var image = _imageMan.loadImage(filename))
-            using (var resizedImage = _imageMan.ScaleImage(image, 600))
+            using (var resizedImage = _imageMan.ScaleImage(image, ImageManager.MinSize))
             {
                 //var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize);
                 var outFile = _imageMan.SaveImageWithQuality(resizedImage, dir.FullName, Path.GetFileNameWithoutExtension(filename.Name), 90);

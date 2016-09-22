@@ -42,7 +42,8 @@
                 {
                     foreach (var key in _imageLoadCache?.Keys)
                     {
-                        _imageLoadCache[key].Result.Dispose();
+                        if (_imageLoadCache[key].Result != null)
+                            _imageLoadCache[key].Result.Dispose();
                         _imageLoadCache[key].Dispose();
                     }
                     _imageLoadCache.Clear();
@@ -189,6 +190,11 @@
 
         public  ConcurrentImageTask GetLoadedImage(FileInfo image)
         {
+            if (image == null)
+            {
+                return null;
+            }
+
             lock (_imageLoadCacheLock)
             {
                 if (_imageLoadCacheHistory == null)

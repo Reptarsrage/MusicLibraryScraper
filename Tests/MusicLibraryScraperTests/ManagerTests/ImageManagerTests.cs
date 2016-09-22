@@ -86,10 +86,10 @@
         {
             FileInfo testFile = new FileInfo(Path.Combine(path.FullName, filepath));
             using (var test = _imageMan.loadImage(testFile))
-            using (var resizedTest = _imageMan.ScaleImage(test, 600))
+            using (var resizedTest = _imageMan.ScaleImage(test, ImageManager.MinSize))
             {
 
-                Assert.AreEqual(600, Math.Min(resizedTest.Width, resizedTest.Height));
+                Assert.AreEqual(ImageManager.MinSize, Math.Min(resizedTest.Width, resizedTest.Height));
                 Assert.AreEqual(test.Width / test.Height, resizedTest.Width / resizedTest.Height);
             }
         }
@@ -119,7 +119,7 @@
             }
 
             using (var test = _imageMan.loadImage(testFile))
-            using (var resizedTest = _imageMan.ScaleImage(test, 600))
+            using (var resizedTest = _imageMan.ScaleImage(test, ImageManager.MinSize))
             {
                 var outFileinfo = _imageMan.SaveImageWithQuality(resizedTest, outDir, outfile, 90);
                 Assert.IsTrue(File.Exists(outFileinfo.FullName), "File exists");
@@ -150,7 +150,7 @@
                 dispose = true;
             }
             var testSize = _preLoadedImages[testFile].Item2;
-            using (var resizedTest = _imageMan.ScaleImage(test, 600))
+            using (var resizedTest = _imageMan.ScaleImage(test, ImageManager.MinSize))
             {
                 long newSize;
                 MemoryStream stream = new MemoryStream();
@@ -158,7 +158,7 @@
                 stream.Close();
                 stream.Dispose();
                 Assert.IsTrue(newSize < testSize);
-                Assert.AreEqual(600, Math.Min(outImage.Width, outImage.Height));
+                Assert.AreEqual(ImageManager.MinSize, Math.Min(outImage.Width, outImage.Height));
                 Assert.AreEqual(test.Width / test.Height, outImage.Width / outImage.Height);
             }
 

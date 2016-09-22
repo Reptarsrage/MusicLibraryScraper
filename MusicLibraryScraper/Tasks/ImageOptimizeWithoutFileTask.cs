@@ -16,7 +16,7 @@
         {
 
             var _imageMan = new ImageManager();
-            using (var resizedImage = _imageMan.ScaleImage(image, 600))
+            using (var resizedImage = _imageMan.ScaleImage(image, ImageManager.MinSize))
             {
                 long newSize = 0;
                 //var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize);

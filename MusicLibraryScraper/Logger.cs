@@ -23,6 +23,7 @@ namespace MusicLibraryScraper
         private static int _taskTotal = 0;
         private static int _taskCompleted = 0;
         private static int _taskFoundTotal = 0;
+        private static int _loadedImages = 0;
 
         private static int _googleRequestCounter = 0;
         private static long _imageDownloadSize = 0;
@@ -48,6 +49,13 @@ namespace MusicLibraryScraper
             get
             {
                 return _imageDownloadSize;
+            }
+        }
+        public static long LoadedImageCount
+        {
+            get
+            {
+                return _loadedImages;
             }
         }
         public static long OrigFileSize
@@ -125,6 +133,10 @@ namespace MusicLibraryScraper
         {
             Interlocked.Increment(ref _ImageURLRequestCounter);
         }
+        public static void IncrementLoadedImageCount()
+        {
+            Interlocked.Increment(ref _loadedImages);
+        }
 
         public static void IncrementTaskTotal()
         {
@@ -172,7 +184,6 @@ namespace MusicLibraryScraper
         }
         #endregion
 
-
         public static void drawTextProgressBar(int progress, int total)
         {
             float onechunk = total / 30.0f;
@@ -215,6 +226,26 @@ namespace MusicLibraryScraper
             Console.CursorLeft = 35;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.Write(progress.ToString() + " of " + total.ToString() + "    "); //blanks at the end remove any excess
+        }
+
+        /// <summary>
+        /// Resets all stats
+        /// </summary>
+        public static void ResetAll()
+        {
+            _ImageURLRequestCounter = 0;
+            _ImageRequestCounter = 0;
+            _taskTimeTotal = 0;
+            _taskTotal = 0;
+            _taskCompleted = 0;
+            _taskFoundTotal = 0;
+            _loadedImages = 0;
+
+            _googleRequestCounter = 0;
+            _imageDownloadSize = 0;
+            _imageOptimizedSize = 0;
+            _origFileSize = 0;
+            _finalFileSize = 0;
         }
 
         /// <summary>

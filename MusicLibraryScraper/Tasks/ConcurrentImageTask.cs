@@ -18,7 +18,7 @@
             {
                 lock (lockMe)
                 {
-                    if (base.Result != null)
+                    if (base.Exception == null && base.Result != null)
                     {
                         return (Image)base.Result.Clone();
                     }
