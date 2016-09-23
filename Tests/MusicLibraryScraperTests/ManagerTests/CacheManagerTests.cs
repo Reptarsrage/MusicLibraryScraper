@@ -141,6 +141,78 @@
                 }
             }
         }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageBadInputTest()
+        {
+            using (var task = _cache.GetAlbumImage("DAT URL DOE"))
+            {
+                Assert.IsNotNull(task);
+
+                var watch = new Stopwatch();
+                watch.Start();
+
+                task.Start();
+                while (!SpinWait.SpinUntil(() => task.IsCompleted, 100))
+                {
+                    /* Spin spin spin */
+                    Assert.Less(watch.ElapsedMilliseconds, 5000, "Task Timed out");
+                }
+                watch.Stop();
+
+                using (var image = task.Result)
+                {
+                    Assert.Null(image, "Image not downloaded");
+                }
+            }
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageNullTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImage(null)); 
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageCachedTest()
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            Parallel.For(0, 100, i =>
+            {
+                var itask = _cache.GetAlbumImage(_imageUrl);
+                try
+                {
+                    itask.Start();
+                }
+                catch (InvalidOperationException)
+                {
+                    /* Already started */
+                }
+            });
+
+            using (var task = _cache.GetAlbumImage(_imageUrl))
+            {
+                Assert.NotNull(task, "Task created");
+                Assert.IsFalse(task.Status.Equals(TaskStatus.Created), "Task started");
+
+                while (!SpinWait.SpinUntil(() => !task.IsCompleted, 100))
+                {
+                    /* Spin spin spin */
+                    Assert.Less(watch.ElapsedMilliseconds, 1000, "Tasks took too long. Probably not cached correctly.");
+                }
+
+                watch.Stop();
+
+
+                using (Image image = task.Result)
+                {
+                    Assert.NotNull(image, "Image not downlaoded");
+                }
+            }
+
+            Assert.AreEqual(1, Logger.ImageDownloadCount, "Only downlaoded one image.");
+        }
 
         [Test]
         [Category("CacheManagerTests")]
@@ -169,7 +241,76 @@
                 }
             }
         }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageBadInputFileTest()
+        {
+            using (var task = _cache.GetAlbumImageFile("DAT URL DOE", "jpg", _outDir))
+            {
+                Assert.IsNotNull(task);
 
+                var watch = new Stopwatch();
+                watch.Start();
+
+                task.Start();
+                while (!SpinWait.SpinUntil(() => task.IsCompleted, 100))
+                {
+                    /* Spin spin spin */
+                    Assert.Less(watch.ElapsedMilliseconds, 5000, "Task Timed out");
+                }
+                watch.Stop();
+
+                Assert.Null(task.Result, "Image not downloaded");
+            }
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageNullFileTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageFile(null, "jpg", _outDir));
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageBadOutDirTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageFile(_imageUrl, "jpg", null));
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageCachedFileTest()
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            Parallel.For(0, 100, i =>
+            {
+                var itask = _cache.GetAlbumImageFile(_imageUrl, "jpg", _outDir);
+                try
+                {
+                    itask.Start();
+                }
+                catch (InvalidOperationException)
+                {
+                    /* Already started */
+                }
+            });
+
+            using (var task = _cache.GetAlbumImageFile(_imageUrl, "jpg", _outDir))
+            {
+                Assert.NotNull(task, "Task created");
+                Assert.IsFalse(task.Status.Equals(TaskStatus.Created), "Task started");
+
+                while (!SpinWait.SpinUntil(() => !task.IsCompleted, 100))
+                {
+                    /* Spin spin spin */
+                    Assert.Less(watch.ElapsedMilliseconds, 1000, "Tasks took too long. Probably not cached correctly.");
+                }
+
+                watch.Stop();
+
+                Assert.NotNull(task.Result, "Image not downlaoded");
+            }
+            Assert.AreEqual(1, Logger.ImageDownloadCount, "Only downlaoded one image.");
+        }
         #endregion
         #region GetAlbumImageUrl
         [Test]
@@ -198,6 +339,75 @@
                     Assert.NotNull(result.Url, "Url fetched");
                 }
             }
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageUrlBadInputTest()
+        {
+            using (var task = _cache.GetAlbumImageURL("@#$SDF", "SPOOOOOOOOOOOOONS"))
+            {
+                Assert.IsNotNull(task);
+
+                var watch = new Stopwatch();
+                watch.Start();
+
+                task.Start();
+                while (!SpinWait.SpinUntil(() => task.IsCompleted, 100))
+                {
+                    /* Spin spin spin */
+                    Assert.Less(watch.ElapsedMilliseconds, 5000, "Task Timed out");
+                }
+                watch.Stop();
+
+                Assert.Null(task.Result, "Urls not fetched");
+            }
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageUrlNullTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL(null, null));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL("", null));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL(null, ""));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL("", ""));
+        }
+        [Test]
+        [Category("CacheManagerTests")]
+        public void GetAlbumImageUrlCachedTest()
+        {
+            var watch = new Stopwatch();
+            watch.Start();
+            Parallel.For(0, 100, i =>
+            {
+                var itask = _cache.GetAlbumImageURL("Modest Mouse", "Moon Antarctica");
+                try
+                {
+                    itask.Start();
+                }
+                catch (InvalidOperationException)
+                {
+                    /* Already started */
+                }
+            });
+
+            using (var task = _cache.GetAlbumImageURL("Modest Mouse", "Moon Antarctica"))
+            {
+                Assert.NotNull(task, "Task created");
+                Assert.IsFalse(task.Status.Equals(TaskStatus.Created), "Task started");
+
+                while (!SpinWait.SpinUntil(() => !task.IsCompleted, 100))
+                {
+                    /* Spin spin spin */
+                    Assert.Less(watch.ElapsedMilliseconds, 1000, "Tasks took too long. Probably not cached correctly.");
+                }
+
+                watch.Stop();
+
+                Assert.NotNull(task.Result);
+                Assert.Greater(task.Result.Results.Count, 0, "Urls fetched");
+            }
+
+            Assert.AreEqual(1, Logger.AmazonRequestCounter, "Only requested one image from Google.");
         }
         #endregion
         #region GetAlbumImageURLUsingGoogle

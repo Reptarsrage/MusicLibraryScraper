@@ -153,7 +153,6 @@ namespace AmazonAlbumArtLookup
             }
             catch (WebException ex)
             {
-
                 using (var stream = ex.Response.GetResponseStream())
                 using (var reader = new StreamReader(stream))
                 {

@@ -290,6 +290,12 @@
                 throw new ArgumentNullException($"Tried to download image with NULL url.");
             }
 
+            if (dir == null)
+            {
+                throw new ArgumentNullException($"Cannot download to a null location.");
+            }
+
+
             lock (_imageFileCacheLock)
             {
                 if (_imageFileCache == null)

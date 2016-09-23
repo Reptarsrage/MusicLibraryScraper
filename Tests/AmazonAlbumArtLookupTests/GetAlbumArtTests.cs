@@ -92,7 +92,7 @@
 
             var result = Parallel.ForEach(
                 list,
-                new ParallelOptions { MaxDegreeOfParallelism = 16 },
+                new ParallelOptions { MaxDegreeOfParallelism = 8 },
                 tuple =>
             {
                 Task<bool> task = Task.Factory.StartNew(() =>

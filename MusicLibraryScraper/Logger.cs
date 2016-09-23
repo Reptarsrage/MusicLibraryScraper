@@ -81,7 +81,7 @@ namespace MusicLibraryScraper
             }
         }
 
-        public static long ImageCount
+        public static long ImageDownloadCount
         {
             get
             {
@@ -89,7 +89,7 @@ namespace MusicLibraryScraper
             }
         }
 
-        public static long ImageUrlCount
+        public static long AmazonRequestCounter
         {
             get
             {

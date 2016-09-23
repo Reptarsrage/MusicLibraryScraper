@@ -73,9 +73,9 @@
             }
             finally
             {
-                Logger.WriteLine($"{Logger.ImageUrlCount} amazon API calls made.");
+                Logger.WriteLine($"{Logger.AmazonRequestCounter} amazon API calls made.");
                 Logger.WriteLine($"{Logger.GoogleRequestCounter} google searches made.");
-                Logger.WriteLine($"{Logger.ImageCount} images fetched.");
+                Logger.WriteLine($"{Logger.ImageDownloadCount} images fetched.");
                 Logger.WriteLine($"{Math.Round(Logger.ImageDownloadSize / 1024.0 / 1024.0, 2)}MB downloaded.");
                 Logger.WriteLine($"{Math.Round(Logger.OptimalImageSize / 1024.0 / 1024.0, 2)}MB of images after optimizing.");
                 Logger.WriteLine($"{Math.Round(Logger.OrigFileSize / 1024.0 / 1024.0, 2)}MB origional files scraped.");
