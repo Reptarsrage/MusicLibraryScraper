@@ -1,4 +1,13 @@
-﻿namespace MusicLibraryScraper.Modals
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Modals
 {
     /// <summary>
     /// Object for parsing and holding onto the cmd line parameters passed into this program.

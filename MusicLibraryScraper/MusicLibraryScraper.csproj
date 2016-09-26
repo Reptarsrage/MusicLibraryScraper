@@ -78,20 +78,20 @@
     <Compile Include="Managers\TaskManager.cs" />
     <Compile Include="Tasks\BaseTask.cs" />
     <Compile Include="Tasks\ConcurrentImageTask.cs" />
-    <Compile Include="Tasks\ImageDownloadWithoutFileTask.cs" />
-    <Compile Include="Tasks\ImageLoadTask.cs" />
-    <Compile Include="Tasks\ImageOptimizeTask.cs" />
-    <Compile Include="Tasks\ImageDownloadTask.cs" />
+    <Compile Include="Tasks\DownloadImageWithoutFileTask.cs" />
+    <Compile Include="Tasks\LoadImageFromFileTask.cs" />
+    <Compile Include="Tasks\OptimizeImageTask.cs" />
+    <Compile Include="Tasks\DownloadImageTask.cs" />
     <Compile Include="Tasks\GoogleImageUrlTask.cs" />
-    <Compile Include="Tasks\ImageOptimizeWithoutFileTask.cs" />
-    <Compile Include="Tasks\ImageUrlTask.cs" />
+    <Compile Include="Tasks\OptimizeImageWithoutFileTask.cs" />
+    <Compile Include="Tasks\GetUrlsFromAmazonTask.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MusicFileScraper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestThrottler.cs" />
     <Compile Include="Modals\ScraperArguments.cs" />
-    <Compile Include="TagLibUtilities.cs" />
+    <Compile Include="Managers\TagLibManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

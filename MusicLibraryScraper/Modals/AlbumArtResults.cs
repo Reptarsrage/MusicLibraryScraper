@@ -1,8 +1,21 @@
-﻿namespace MusicLibraryScraper.Modals
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Modals
 {
     using AmazonAlbumArtLookup.Modals;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// A Serializable object used to communicate with internal 
+    /// and external class Libraries.
+    /// </summary>
     public class AlbumArtResults
     {
         private List<AlbumArtResult> _list;

@@ -1,4 +1,13 @@
-﻿namespace MusicLibraryScraper
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper
 {
     using Fclp;
     using Managers;
@@ -9,6 +18,9 @@
     using System.Linq;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Main
+    /// </summary>
     class Program
     {
         static Stack<FileInfo> _files;
@@ -16,18 +28,18 @@
 
         static void Main(string[] args)
         {
+            var options = ParseCommandLineOptions(args);
+            if (options == null)
+            {
+                return;
+            }
+            else if (options.Help)
+            {
+                return;
+            }
+
             try
             {
-                var options = ParseCommandLineOptions(args);
-                if (options == null)
-                {
-                    throw new ArgumentException();
-                }
-                else if (options.Help)
-                {
-                    return;
-                }
-
                 // Initialize
                 RequestThrottler throttler = new RequestThrottler();
                 CacheManager CacheManager = new CacheManager();
@@ -35,15 +47,26 @@
                 _files = scraper.DirSearch(options);
 
                 //Copy files to final dest
+                if (options.OutputDir != null && !Directory.Exists(options.OutputDir))
+                {
+                    Directory.CreateDirectory(Path.GetFullPath(options.OutputDir));
+                }
+
                 Logger.WriteLine($"\n\nCopying music files to {options.OutputDir}");
                 var temp = new Stack<FileInfo>();
                 var ct = _files.Count;
                 while (_files.Count > 0)
                 {
                     Logger.drawTextProgressBar(ct - _files.Count, ct);
-                    File.Copy(_files.Peek().FullName, Path.Combine(options.OutputDir, _files.Peek().Name), true);
+                    var newPath = _files.Peek().FullName.Replace(Path.GetFullPath(options.SourceDir), Path.GetFullPath(options.OutputDir));
+                    var newDir = Directory.CreateDirectory(Path.GetDirectoryName(newPath)).FullName;
+                    if (!Directory.Exists(newDir))
+                    {
+                        Directory.CreateDirectory(newDir);
+                    }
+                    File.Copy(_files.Peek().FullName, newPath, true);
 
-                    temp.Push(new FileInfo(Path.Combine(options.OutputDir, _files.Peek().Name)));
+                    temp.Push(new FileInfo(newPath));
                     _files.Pop();
                 }
 
@@ -93,6 +116,9 @@
             }
         }
 
+        /// <summary>
+        /// Helper to scrape a file
+        /// </summary>
         private static void Scrape(ScraperArguments options, FileInfo file, RequestThrottler throttler, CacheManager CacheManager) {
             try
             {
@@ -167,9 +193,14 @@
                 .WithDescription("The comma separated file patterns to scrape for when finding music files. (e.g. \"*.mp3,*.flac\"). Default is all supported file types.");
 
             _parser.SetupHelp("?", "help")
-                .Callback(text => Console.WriteLine("\nUsage:\n" + text));
+                .Callback(text => { Console.WriteLine("\nUsage:\n" + text); });
 
             var result = _parser.Parse(args);
+
+            if (result.HelpCalled)
+            {
+                return null;
+            }
 
             if (result.HasErrors)
             {

@@ -1,12 +1,24 @@
-﻿namespace MusicLibraryScraper.Tasks
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Tasks
 {
     using Managers;
     using Modals;
 
+    /// <summary>
+    /// Retrieves albnum art URLs using Google Advanced Image Search
+    /// </summary>
     class GoogleImageUrlTask : BaseTask<AlbumArtResults>
     {
 
-        public static AlbumArtResults GetAlbumImageURL(string query) {
+        private static AlbumArtResults GetAlbumImageURL(string query) {
             Logger.WriteLine($"Fetching image from Google using query: {query}");
             Logger.IncrementGooglerequestCounter();
             var lookup = new GoogleImageDownloadManager();
@@ -23,6 +35,9 @@
             }
         }
 
+        /// <summary>
+        /// creates a new <see cref="GoogleImageUrlTask"/>
+        /// </summary>
         public GoogleImageUrlTask(string query) : base(() => GetAlbumImageURL(query))
         {
         }

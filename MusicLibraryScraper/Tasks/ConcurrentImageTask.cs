@@ -1,4 +1,13 @@
-﻿namespace MusicLibraryScraper.Tasks
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Tasks
 {
     using System;
     using System.Drawing;
@@ -12,7 +21,7 @@
             lockMe = new object();
         }
 
-        public new Image Result
+        public virtual new Image Result
         {
             get
             {

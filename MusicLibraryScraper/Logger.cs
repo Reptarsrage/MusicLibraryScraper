@@ -1,9 +1,9 @@
 ﻿/// <summary>
 /// Author: Justin Robb
-/// Date: 8/6/2016
+/// Date: 9/25/2016
 /// 
-/// Description:
-/// Utility for logging and output
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
 /// 
 /// </summary>
 
@@ -12,13 +12,15 @@ namespace MusicLibraryScraper
     using System;
     using System.Threading;
 
-    /// Singleton utility for logging and output
+    /// <summary>
+    /// Utility for logging and output
+    /// </summary>
     public static class Logger
     {
         #region private fields
         private static int _progress = int.MaxValue;
         private static int _ImageURLRequestCounter = 0;
-        private static int _ImageRequestCounter = 0;
+        private static int _ImagesDownloadedCounter = 0;
         private static long _taskTimeTotal = 0;
         private static int _taskTotal = 0;
         private static int _taskCompleted = 0;
@@ -33,7 +35,11 @@ namespace MusicLibraryScraper
 
         private static object consoleLock = new object();
         #endregion
+
         #region public fields
+        /// <summary>
+        /// Count of Google Search Requests made
+        /// </summary>
         public static int GoogleRequestCounter
         {
             get
@@ -41,9 +47,13 @@ namespace MusicLibraryScraper
                 return _googleRequestCounter;
             }
         }
-
+        /// <summary>
+        /// Count of total files to be scraped
+        /// </summary>
         public static int TotalFilesScraping { get; set; }
-
+        /// <summary>
+        /// Size of all downlaoded images
+        /// </summary>
         public static long ImageDownloadSize
         {
             get
@@ -51,6 +61,9 @@ namespace MusicLibraryScraper
                 return _imageDownloadSize;
             }
         }
+        /// <summary>
+        /// Count of loaded images from files
+        /// </summary>
         public static long LoadedImageCount
         {
             get
@@ -58,6 +71,9 @@ namespace MusicLibraryScraper
                 return _loadedImages;
             }
         }
+        /// <summary>
+        /// Size of origional scraped files
+        /// </summary>
         public static long OrigFileSize
         {
             get
@@ -65,6 +81,9 @@ namespace MusicLibraryScraper
                 return _origFileSize;
             }
         }
+        /// <summary>
+        /// Size of images after optimization
+        /// </summary>
         public static long OptimalImageSize
         {
             get
@@ -72,7 +91,9 @@ namespace MusicLibraryScraper
                 return _imageOptimizedSize;
             }
         }
-
+        /// <summary>
+        /// Size of final scraped files
+        /// </summary>
         public static long FinalFileSize
         {
             get
@@ -80,15 +101,19 @@ namespace MusicLibraryScraper
                 return _finalFileSize;
             }
         }
-
+        /// <summary>
+        /// Count of downloaded images
+        /// </summary>
         public static long ImageDownloadCount
         {
             get
             {
-                return _ImageRequestCounter;
+                return _ImagesDownloadedCounter;
             }
         }
-
+        /// <summary>
+        /// Count of requests made to Amazon API
+        /// </summary>
         public static long AmazonRequestCounter
         {
             get
@@ -96,7 +121,9 @@ namespace MusicLibraryScraper
                 return _ImageURLRequestCounter;
             }
         }
-
+        /// <summary>
+        /// Total time for each file to be scraped
+        /// </summary>
         public static long TaskTime
         {
             get
@@ -104,6 +131,9 @@ namespace MusicLibraryScraper
                 return _taskTimeTotal;
             }
         }
+        /// <summary>
+        /// Total number of files scraped (completed)
+        /// </summary>
         public static long TaskCount
         {
             get
@@ -111,7 +141,9 @@ namespace MusicLibraryScraper
                 return _taskTotal;
             }
         }
-
+        /// <summary>
+        /// Couint of files suceesfully scraped (success)
+        /// </summary>
         public static int TaskCompleted
         {
             get
@@ -119,7 +151,9 @@ namespace MusicLibraryScraper
                 return _taskCompleted;
             }
         }
-
+        /// <summary>
+        /// Count of files for which art was sucessfully found
+        /// </summary>
         public static long TaskFoundCount
         {
             get
@@ -128,62 +162,97 @@ namespace MusicLibraryScraper
             }
         }
         #endregion
+
         #region Incrementers
+        /// <summary>
+        /// Increments count of requests to Amazon APIs
+        /// </summary>
         public static void IncrementUrlCount()
         {
             Interlocked.Increment(ref _ImageURLRequestCounter);
         }
+        /// <summary>
+        /// Increments count of images loaded from file
+        /// </summary>
         public static void IncrementLoadedImageCount()
         {
             Interlocked.Increment(ref _loadedImages);
         }
-
+        /// <summary>
+        /// Increments count of scaped files (completed)
+        /// </summary>
         public static void IncrementTaskTotal()
         {
             Interlocked.Increment(ref _taskTotal);
         }
-
+        /// <summary>
+        /// Increments count of successfully scaped files (success)
+        /// </summary>
         public static void IncrementTaskCompleted()
         {
             Interlocked.Increment(ref _taskCompleted);
         }
-
+        /// <summary>
+        /// Increments count of found files
+        /// </summary>
         public static void IncrementTaskFound()
         {
             Interlocked.Increment(ref _taskFoundTotal);
         }
-
+        /// <summary>
+        /// Adds to total time spent scraping files
+        /// </summary>
         public static void AddTaskTime(long ms)
         {
             Interlocked.Add(ref _taskTimeTotal, ms);
         }
-
-        public static void IncrementImageCount()
+        /// <summary>
+        /// Increments count of downlaoded images
+        /// </summary>
+        public static void IncrementDownlaodedImageCount()
         {
-            Interlocked.Increment(ref _ImageRequestCounter);
+            Interlocked.Increment(ref _ImagesDownloadedCounter);
         }
+        /// <summary>
+        /// Adds to total final file size
+        /// </summary>
         public static void AddFinalFileSize(long size)
         {
             Interlocked.Add(ref _finalFileSize, size);
         }
+        /// <summary>
+        /// Adds to total origional file size
+        /// </summary>
         public static void AddOrigionalFileSize(long size)
         {
             Interlocked.Add(ref _origFileSize, size);
         }
+        /// <summary>
+        /// Adds to total optimized image size
+        /// </summary>
         public static void AddOptimizedImageSize(long size)
         {
             Interlocked.Add(ref _imageOptimizedSize, size);
         }
+        /// <summary>
+         /// Adds to total downloaded image size
+         /// </summary>
         public static void AddImageDownloadSize(long size)
         {
             Interlocked.Add(ref _imageDownloadSize, size);
         }
+        /// <summary>
+        /// Increments count of Google requests made
+        /// </summary>
         public static void IncrementGooglerequestCounter()
         {
             Interlocked.Increment(ref _googleRequestCounter);
         }
         #endregion
 
+        /// <summary>
+        /// Draws progress to console. Avoid writing to console during this time.
+        /// </summary>
         public static void drawTextProgressBar(int progress, int total)
         {
             float onechunk = total / 30.0f;
@@ -234,7 +303,7 @@ namespace MusicLibraryScraper
         public static void ResetAll()
         {
             _ImageURLRequestCounter = 0;
-            _ImageRequestCounter = 0;
+            _ImagesDownloadedCounter = 0;
             _taskTimeTotal = 0;
             _taskTotal = 0;
             _taskCompleted = 0;

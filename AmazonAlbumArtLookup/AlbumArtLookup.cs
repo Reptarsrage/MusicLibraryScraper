@@ -1,4 +1,9 @@
 ﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Uses Amazon AWS Advertising API to retrieve album art.
 /// 
 /// </summary>
 
@@ -13,7 +18,6 @@ namespace AmazonAlbumArtLookup
     using System.Configuration;
     using System.Text.RegularExpressions;
     using Modals;
-    using System.Runtime.Serialization;
 
     /// <summary>
     /// <para>
@@ -99,6 +103,9 @@ namespace AmazonAlbumArtLookup
             return result;
         }
 
+        /// <summary>
+        /// Helper to constrct API query.
+        /// </summary>
         private List<AWSMusicItem> GetAlbumArt(IDictionary<string, string> requestDict, bool verbose = false) {
 
 

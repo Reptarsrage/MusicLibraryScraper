@@ -1,4 +1,13 @@
-﻿namespace MusicLibraryScraper.Tasks
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Tasks
 {
     using System;
     using System.IO;
@@ -6,11 +15,14 @@
     using System.Text.RegularExpressions;
     using System.Threading;
 
-    class ImageDownloadTask : BaseTask<FileInfo>
+    /// <summary>
+    /// Downloads an image and saves to on-disk file
+    /// </summary>
+    class DownloadImageTask : BaseTask<FileInfo>
     {
         public static FileInfo GetAlbumImage(string url, DirectoryInfo dir, string ext = "png", int tries = 0) {
             Logger.WriteLine($"Fetching image at {url}");
-            Logger.IncrementImageCount();
+            Logger.IncrementDownlaodedImageCount();
 
             string myUniqueFileName = Path.Combine(dir.FullName, string.Format($"{Guid.NewGuid()}.{ext}"));
 
@@ -65,7 +77,10 @@
             }
         }
 
-        public ImageDownloadTask(string url, DirectoryInfo dir, string filetype = "png") : base(() => GetAlbumImage(url, dir, filetype))
+        /// <summary>
+        /// creates a new <see cref="DownloadImageTask"/>
+        /// </summary>
+        public DownloadImageTask(string url, DirectoryInfo dir, string filetype = "png") : base(() => GetAlbumImage(url, dir, filetype))
         {
         }
     }

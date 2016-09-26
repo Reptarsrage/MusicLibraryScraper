@@ -1,4 +1,13 @@
-﻿namespace MusicLibraryScraper
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper
 {
     using Managers;
     using Modals;
@@ -11,13 +20,19 @@
     using System.Text.RegularExpressions;
     using Tasks;
 
+    /// <summary>
+    /// Queries for images, downloads images, optimizes them, and finally tags files with album art.
+    /// </summary>
     class MusicFileScraper
     {
         private TaskManager _taskMan;
         private RequestThrottler RequestThrottler;
         private CacheManager CacheManager;
 
-       public MusicFileScraper(RequestThrottler RequestThrottler, CacheManager CacheManager)
+        /// <summary>
+        /// Creates a new instance of <<see cref="MusicFileScraper"/>
+        /// </summary>
+        public MusicFileScraper(RequestThrottler RequestThrottler, CacheManager CacheManager)
         {
             this._taskMan = new TaskManager();
             this.RequestThrottler = RequestThrottler;
@@ -26,10 +41,13 @@
 
         #region public methods
 
+        /// <summary>
+        /// Queries for images, downloads images, optimizes them, and finally tags the file with album art.
+        /// </summary>
         public void Scrape(ScraperArguments options, FileInfo file)
         {
             FileInfo art;
-            TagLibUtilities tagLib;
+            TagLibManager tagLib;
             string artist;
             string albumArtist;
             string title;
@@ -45,7 +63,7 @@
 
             watch.Start();
 
-            tagLib = new TagLibUtilities();
+            tagLib = new TagLibManager();
             artist = tagLib.GetArtist(file);
             albumArtist = tagLib.GetAlbumArtist(file);
             title = tagLib.GetTitle(file);
@@ -55,7 +73,7 @@
             Logger.WriteLine($"Scraping file ({Path.GetFileNameWithoutExtension(file.FullName)}).");
 
             // Try Amazon first
-            var task = CacheManager.GetAlbumImageURL(string.IsNullOrEmpty(albumArtist) ? artist : albumArtist, string.IsNullOrEmpty(album) ? filename : album);
+            var task = CacheManager.GetAlbumImageURLFromAmazon(string.IsNullOrEmpty(albumArtist) ? artist : albumArtist, string.IsNullOrEmpty(album) ? filename : album);
 
             if (_taskMan.RunTask(task, $"getting album art for music file: ({Path.GetFileNameWithoutExtension(file.FullName)}) using amazon.", true, RequestThrottler) && 
                 task.Result != null && task.Result.Results != null)
@@ -103,43 +121,6 @@
             Logger.AddFinalFileSize(file.Length);
             Logger.AddTaskTime(watch.ElapsedMilliseconds);
         }
-
-        private bool DownloadOptimizeAndTag(FileInfo file, string url, TagLibUtilities tagLib, string fileType, ScraperArguments options, bool WithoutFiles)
-        {
-            Image downloadedImage = null;
-            Image albumArt = null;
-            FileInfo art;
-            bool result;
-
-            if (WithoutFiles)
-            {
-                result =    (url != null &&
-                            (downloadedImage = DownloadButNotSaveImage(url)) != null &&                // Downloaded art
-                            ((albumArt = OptimizeImageWithoutSave(url, downloadedImage)) != null) &&   // Optimize art
-                            TagMusicFile(file, tagLib, albumArt));                                     // tag file
-            }
-            else
-            {
-                result =    (url != null &&
-                            (art = DownloadImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null && // Downloaded art
-                            ((art = OptimizeImage(art, options.OptimizedImageOutDir)) != null) &&                           // Optimize art
-                            (albumArt = LoadImage(art)) != null &&                                                          // Loaded art
-                            TagMusicFile(file, tagLib, albumArt));                                                          // tagged file
-            }
-
-            if (downloadedImage != null)
-            {
-                downloadedImage.Dispose();
-            }
-
-            if (albumArt != null)
-            {
-                albumArt.Dispose();
-            }
-
-            return result;
-        }
-
 
         /// <summary>
         /// Searches the directory given for all files matching extensions given for music files.
@@ -237,6 +218,48 @@
 
         #region private methods
 
+        /// <summary>
+        /// Downloads images, optimizes them, and finally tags files with album art
+        /// </summary>
+        private bool DownloadOptimizeAndTag(FileInfo file, string url, TagLibManager tagLib, string fileType, ScraperArguments options, bool WithoutFiles)
+        {
+            Image downloadedImage = null;
+            Image albumArt = null;
+            FileInfo art;
+            bool result;
+
+            if (WithoutFiles)
+            {
+                result = (url != null &&
+                            (downloadedImage = DownloadButNotSaveImage(url)) != null &&                // Downloaded art
+                            ((albumArt = OptimizeButNotSaveImage(url, downloadedImage)) != null) &&   // Optimize art
+                            TagMusicFile(file, tagLib, albumArt));                                     // tag file
+            }
+            else
+            {
+                result = (url != null &&
+                            (art = DownloadAndSaveImage(url, fileType, new DirectoryInfo(options.ImageOutDir), tagLib)) != null && // Downloaded art
+                            ((art = OptimizeImageWithSave(art, options.OptimizedImageOutDir)) != null) &&                           // Optimize art
+                            (albumArt = LoadImage(art)) != null &&                                                          // Loaded art
+                            TagMusicFile(file, tagLib, albumArt));                                                          // tagged file
+            }
+
+            if (downloadedImage != null)
+            {
+                downloadedImage.Dispose();
+            }
+
+            if (albumArt != null)
+            {
+                albumArt.Dispose();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Uses Google to retrieve album art URL's
+        /// </summary>
         private AlbumArtResults UseAlternateGoogleScraper(ScraperArguments options, FileInfo file)
         {
             Logger.WriteLine($"Using Google as alternate image source for file: {Path.GetFileNameWithoutExtension(file.FullName)}");
@@ -262,7 +285,10 @@
             return null;
         }
 
-        private bool TagMusicFile(FileInfo music, TagLibUtilities tagLib, Image image)
+        /// <summary>
+        /// Tags file with artwork
+        /// </summary>
+        private bool TagMusicFile(FileInfo music, TagLibManager tagLib, Image image)
         {
             try
             {
@@ -288,7 +314,10 @@
             }
         }
 
-        private FileInfo OptimizeImage(FileInfo art, string @out)
+        /// <summary>
+        /// Optimizes album artwork image to file
+        /// </summary>
+        private FileInfo OptimizeImageWithSave(FileInfo art, string @out)
         {
             if (!File.Exists(art.FullName))
             {
@@ -306,7 +335,7 @@
             if (_taskMan.RunTask(task, $"optimizing image: {art.FullName}.", false, RequestThrottler))
             {
                 Logger.WriteLine($"Optimized image {art.FullName}.");
-                return ((ImageOptimizeTask)task).Result;
+                return ((OptimizeImageTask)task).Result;
             }
             else
             {
@@ -314,6 +343,9 @@
             }
         }
 
+        /// <summary>
+        /// Loads downloadedd image from file
+        /// </summary>
         private Image LoadImage(FileInfo art)
         {
             if (!File.Exists(art.FullName))
@@ -333,7 +365,9 @@
                 return null;
             }
         }
-
+        /// <summary>
+        /// Downlaods album art to in-memory stream
+        /// </summary>
         private Image DownloadButNotSaveImage(string url)
         {
             var task = CacheManager.GetAlbumImage(url);
@@ -345,8 +379,10 @@
 
             return null;
         }
-
-        private Image OptimizeImageWithoutSave(string url, Image image)
+        /// <summary>
+        /// Optimizes album art to in-memory stream
+        /// </summary>
+        private Image OptimizeButNotSaveImage(string url, Image image)
         {
             var task = CacheManager.GetOptimizedImage(url, image);
 
@@ -357,10 +393,12 @@
 
             return null;
         }
-
-        private FileInfo DownloadImage(string url, string filetype, DirectoryInfo outDir, TagLibUtilities tagLib)
+        /// <summary>
+        /// Downlaods album art to on-disk file
+        /// </summary>
+        private FileInfo DownloadAndSaveImage(string url, string filetype, DirectoryInfo outDir, TagLibManager tagLib)
         {
-            var task = CacheManager.GetAlbumImageFile(url, filetype, outDir);
+            var task = CacheManager.DownloadAlbumImageFile(url, filetype, outDir);
 
             if (_taskMan.RunTask(task, $"downoading image: {url}.", false, RequestThrottler))
             {
@@ -370,9 +408,12 @@
             return null;
         }
 
+        /// <summary>
+        /// Helper method to construct a Google Search query
+        /// </summary>
         private string CreateQuery(FileInfo file)
         {
-            var tagLib = new TagLibUtilities();
+            var tagLib = new TagLibManager();
             var artist = tagLib.GetArtist(file);
             var albumArtist = tagLib.GetAlbumArtist(file);
             var title = tagLib.GetTitle(file);

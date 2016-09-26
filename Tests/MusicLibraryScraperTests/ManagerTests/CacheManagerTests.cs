@@ -218,7 +218,7 @@
         [Category("CacheManagerTests")]
         public void GetAlbumImageFileTest()
         {
-            using (var task = _cache.GetAlbumImageFile(_imageUrl, "jpg", _outDir))
+            using (var task = _cache.DownloadAlbumImageFile(_imageUrl, "jpg", _outDir))
             {
                 Assert.IsNotNull(task);
 
@@ -245,7 +245,7 @@
         [Category("CacheManagerTests")]
         public void GetAlbumImageBadInputFileTest()
         {
-            using (var task = _cache.GetAlbumImageFile("DAT URL DOE", "jpg", _outDir))
+            using (var task = _cache.DownloadAlbumImageFile("DAT URL DOE", "jpg", _outDir))
             {
                 Assert.IsNotNull(task);
 
@@ -267,13 +267,13 @@
         [Category("CacheManagerTests")]
         public void GetAlbumImageNullFileTest()
         {
-            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageFile(null, "jpg", _outDir));
+            Assert.Throws<ArgumentNullException>(() => _cache.DownloadAlbumImageFile(null, "jpg", _outDir));
         }
         [Test]
         [Category("CacheManagerTests")]
         public void GetAlbumImageBadOutDirTest()
         {
-            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageFile(_imageUrl, "jpg", null));
+            Assert.Throws<ArgumentNullException>(() => _cache.DownloadAlbumImageFile(_imageUrl, "jpg", null));
         }
         [Test]
         [Category("CacheManagerTests")]
@@ -283,7 +283,7 @@
             watch.Start();
             Parallel.For(0, 100, i =>
             {
-                var itask = _cache.GetAlbumImageFile(_imageUrl, "jpg", _outDir);
+                var itask = _cache.DownloadAlbumImageFile(_imageUrl, "jpg", _outDir);
                 try
                 {
                     itask.Start();
@@ -294,7 +294,7 @@
                 }
             });
 
-            using (var task = _cache.GetAlbumImageFile(_imageUrl, "jpg", _outDir))
+            using (var task = _cache.DownloadAlbumImageFile(_imageUrl, "jpg", _outDir))
             {
                 Assert.NotNull(task, "Task created");
                 Assert.IsFalse(task.Status.Equals(TaskStatus.Created), "Task started");
@@ -317,7 +317,7 @@
         [Category("CacheManagerTests")]
         public void GetAlbumImageUrlTest()
         {
-            using (var task = _cache.GetAlbumImageURL("Modest Mouse", "Moon Antarctica"))
+            using (var task = _cache.GetAlbumImageURLFromAmazon("Modest Mouse", "Moon Antarctica"))
             {
                 Assert.IsNotNull(task);
 
@@ -344,7 +344,7 @@
         [Category("CacheManagerTests")]
         public void GetAlbumImageUrlBadInputTest()
         {
-            using (var task = _cache.GetAlbumImageURL("@#$SDF", "SPOOOOOOOOOOOOONS"))
+            using (var task = _cache.GetAlbumImageURLFromAmazon("@#$SDF", "SPOOOOOOOOOOOOONS"))
             {
                 Assert.IsNotNull(task);
 
@@ -366,10 +366,10 @@
         [Category("CacheManagerTests")]
         public void GetAlbumImageUrlNullTest()
         {
-            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL(null, null));
-            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL("", null));
-            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL(null, ""));
-            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURL("", ""));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURLFromAmazon(null, null));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURLFromAmazon("", null));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURLFromAmazon(null, ""));
+            Assert.Throws<ArgumentNullException>(() => _cache.GetAlbumImageURLFromAmazon("", ""));
         }
         [Test]
         [Category("CacheManagerTests")]
@@ -379,7 +379,7 @@
             watch.Start();
             Parallel.For(0, 100, i =>
             {
-                var itask = _cache.GetAlbumImageURL("Modest Mouse", "Moon Antarctica");
+                var itask = _cache.GetAlbumImageURLFromAmazon("Modest Mouse", "Moon Antarctica");
                 try
                 {
                     itask.Start();
@@ -390,7 +390,7 @@
                 }
             });
 
-            using (var task = _cache.GetAlbumImageURL("Modest Mouse", "Moon Antarctica"))
+            using (var task = _cache.GetAlbumImageURLFromAmazon("Modest Mouse", "Moon Antarctica"))
             {
                 Assert.NotNull(task, "Task created");
                 Assert.IsFalse(task.Status.Equals(TaskStatus.Created), "Task started");

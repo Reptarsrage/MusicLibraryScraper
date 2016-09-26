@@ -1,37 +1,59 @@
-﻿namespace MusicLibraryScraper
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper
 {
-    using System;
     using System.Collections.Generic;
     using System.Drawing;
     using System.Drawing.Imaging;
     using System.IO;
 
-    class TagLibUtilities
+    /// <summary>
+    /// Exposes the TagLib library and it's utilities.
+    /// </summary>
+    class TagLibManager
     {
+        /// <summary>
+        /// Gets artist from music file
+        /// </summary>
         public string GetArtist(FileInfo musicFile)
         {
             var file = TagLib.File.Create(musicFile.FullName);
             return file.Tag?.FirstPerformer ?? null;
         }
-
+        /// <summary>
+        /// Gets album artist from music file
+        /// </summary>
         public string GetAlbumArtist(FileInfo musicFile)
         {
             var file = TagLib.File.Create(musicFile.FullName);
             return file.Tag?.FirstAlbumArtist ?? null;
         }
-
+        /// <summary>
+        /// Gets album from music file
+        /// </summary>
         public string GetAlbum(FileInfo musicFile)
         {
             var file = TagLib.File.Create(musicFile.FullName);
             return file.Tag?.Album ?? null;
         }
-
+        /// <summary>
+        /// Gets title from music file
+        /// </summary>
         public string GetTitle(FileInfo musicFile)
         {
             var file = TagLib.File.Create(musicFile.FullName);
             return file.Tag?.Title ?? null;
         }
-
+        /// <summary>
+        /// Gets artworks from music file
+        /// </summary>
         public List<Image> GetTaggedArtwork(FileInfo musicFile)
         {
             try
@@ -50,7 +72,9 @@
                 return null;
             }
         }
-
+        /// <summary>
+        /// Removes artworks from music file
+        /// </summary>
         public bool RemoveTaggedArtwork(FileInfo musicFile)
         {
             var file = TagLib.File.Create(musicFile.FullName);
@@ -67,7 +91,9 @@
                 return false;
             }
         }
-
+        /// <summary>
+        /// Adds atwork to music file. returns true on success.
+        /// </summary>
         public bool TagFileWithCoverArtwork(FileInfo musicFile, Image imageFile)
         {
             var file = TagLib.File.Create(musicFile.FullName);
@@ -94,7 +120,9 @@
                 return true;
             }
         }
-
+        /// <summary>
+        /// Helper method for getting image mime type.
+        /// </summary>
         private string GetMimeType(Image i)
         {
             foreach (ImageCodecInfo codec in ImageCodecInfo.GetImageDecoders())

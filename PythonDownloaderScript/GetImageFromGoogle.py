@@ -1,4 +1,13 @@
-﻿from bs4 import BeautifulSoup # web parser
+﻿###
+### Author: Justin Robb
+### Date: 9/25/2016
+### 
+### Project Description:
+### Uses Google Advanced Image Search to retrieve album art.
+### Outputs the results as XML.
+### 
+
+from bs4 import BeautifulSoup # web parser
 import ctypes
 import os # windows / linux commands
 import platform

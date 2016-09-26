@@ -1,10 +1,22 @@
-﻿namespace MusicLibraryScraper
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper
 {
     using System;
     using System.Collections.Concurrent;
     using System.Threading.Tasks;
     using System.Runtime.InteropServices;
 
+    /// <summary>
+    /// Throttles requests so that parrallel API calls do not start getting kicked-back
+    /// </summary>
     public class RequestThrottler : IDisposable
     {
         [DllImport("WinMM.dll", SetLastError = true)]
@@ -23,6 +35,9 @@
         private TimerEventHandler timerRef;
         private const int timeout = 100;
 
+        /// <summary>
+        /// Gets the amount of time before a task is dequeued. (i.e. Throttle Time)
+        /// </summary>
         public static int Timeout
         {
             get
@@ -31,6 +46,9 @@
             }
         }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="RequestThrottler"/>
+        /// </summary>
         public RequestThrottler()
         {
             lock (slock)
@@ -49,11 +67,17 @@
             }
         }
 
+        /// <summary>
+        /// Begins a task without throtteling
+        /// </summary>
         public void StartTaskImmediately(Task task)
         {
             StartTask(task);
         }
 
+        /// <summary>
+        /// Begins a task with throtteling. Task must wait for an open slot before running.
+        /// </summary>
         public void ThrottleTask(Task task)
         {
             lock (slock)
@@ -69,11 +93,17 @@
             methodQueue.Enqueue(task);
         }
 
+        /// <summary>
+        /// Discontinues all future throtteling
+        /// </summary>
         public void Dispose()
         {
             StopInternal();
         }
 
+        /// <summary>
+        /// A slot has opened up so lets fill it with a task
+        /// </summary>
         private void DequeTask(uint id, uint msg, ref int userCtx, int rsv1, int rsv2)
         {
             Task action;
@@ -83,6 +113,9 @@
             }
         }
 
+        /// <summary>
+        /// Halt
+        /// </summary>
         private void StopInternal()
         {
             lock (slock)
@@ -104,6 +137,9 @@
             }
         }
 
+        /// <summary>
+        /// Start a task
+        /// </summary>
         private void StartTask(Task action)
         {
             if (action.Status.Equals(TaskStatus.Created))

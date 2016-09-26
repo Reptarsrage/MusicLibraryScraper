@@ -1,4 +1,13 @@
-﻿namespace MusicLibraryScraper.Tasks
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Tasks
 {
     using System;
     using System.Drawing;
@@ -6,16 +15,18 @@
     using System.Net;
     using System.Threading;
 
-    class ImageDownloadWithoutFileTask : IDisposable
+    /// <summary>
+    /// Downloads an image to in-memory object.
+    /// </summary>
+    class DownloadImageWithoutFileTask : IDisposable
     {
-        private Image image;
         private Stream stream;
         public ConcurrentImageTask Task;
 
-        protected Image GetAlbumImageWithoutFile(string url, int tries = 0)
+        private Image GetAlbumImageWithoutFile(string url, int tries = 0)
         {
             Logger.WriteLine($"Fetching image at {url}");
-            Logger.IncrementImageCount();
+            Logger.IncrementDownlaodedImageCount();
 
             try
             {
@@ -45,9 +56,9 @@
                         {
                             Logger.WriteSuccess($"Downloaded {url}.");
                             Logger.AddImageDownloadSize(data.Length);
-                            stream = new MemoryStream(data);
-                            var size = stream.Length;
-                            var ret = Image.FromStream(stream);
+                            this.stream = new MemoryStream(data);
+                            var size = this.stream.Length;
+                            var ret = Image.FromStream(this.stream);
                             Logger.AddImageDownloadSize(size);
                             return ret;
                         }
@@ -76,7 +87,7 @@
         {
             try
             {
-                this.image.Dispose();
+                this.Task.Result.Dispose();
             }
             catch { }
 
@@ -93,7 +104,10 @@
             catch { }
         }
 
-        public ImageDownloadWithoutFileTask(string url)
+        /// <summary>
+        /// Creates a new <see cref="DownloadImageWithoutFileTask"/>
+        /// </summary>
+        public DownloadImageWithoutFileTask(string url)
         {
             this.Task = new ConcurrentImageTask(() => GetAlbumImageWithoutFile(url));
         }

@@ -86,7 +86,7 @@
         {
             FileInfo testFile = new FileInfo(Path.Combine(path.FullName, filepath));
             using (var test = _imageMan.loadImage(testFile))
-            using (var resizedTest = _imageMan.ScaleImage(test, ImageManager.MinSize))
+            using (var resizedTest = _imageMan.ScaleImage(test))
             {
 
                 Assert.AreEqual(ImageManager.MinSize, Math.Min(resizedTest.Width, resizedTest.Height));
@@ -119,11 +119,11 @@
             }
 
             using (var test = _imageMan.loadImage(testFile))
-            using (var resizedTest = _imageMan.ScaleImage(test, ImageManager.MinSize))
+            using (var resizedTest = _imageMan.ScaleImage(test))
             {
-                var outFileinfo = _imageMan.SaveImageWithQuality(resizedTest, outDir, outfile, 90);
+                var outFileinfo = _imageMan.SaveImageWithQuality(resizedTest, outDir, outfile, 70L);
                 Assert.IsTrue(File.Exists(outFileinfo.FullName), "File exists");
-                Assert.IsTrue(outFileinfo.Length < testFile.Length, "File is smaller");
+                Assert.LessOrEqual(outFileinfo.Length, testFile.Length, "File is smaller");
             }
         }
 
@@ -154,7 +154,7 @@
             {
                 long newSize;
                 MemoryStream stream = new MemoryStream();
-                var outImage = _imageMan.ConvertImagetoQuality(resizedTest, 90, out newSize, ref stream);
+                var outImage = _imageMan.ConvertImagetoQuality(resizedTest, out newSize, ref stream);
                 stream.Close();
                 stream.Dispose();
                 Assert.IsTrue(newSize < testSize);

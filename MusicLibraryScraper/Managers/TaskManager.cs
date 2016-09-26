@@ -1,15 +1,33 @@
-﻿namespace MusicLibraryScraper.Managers
+﻿/// <summary>
+/// Author: Justin Robb
+/// Date: 9/25/2016
+/// 
+/// Project Description:
+/// Adds album art to each file in a library of music using online image sources.
+/// 
+/// </summary>
+
+namespace MusicLibraryScraper.Managers
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Runs tasks and waits for tasks to complete.
+    /// Throttles tasks when specified.
+    /// </summary>
     public class TaskManager
     {
-        public TaskManager()
-        {
-        }
-
+        /// <summary>
+        /// Runs the given task and blocks current thread until task completes.
+        /// </summary>
+        /// <param name="task">Task to run</param>
+        /// <param name="description">Description of task</param>
+        /// <param name="throttle">Flag to throttle the task.</param>
+        /// <param name="RequestThrottler">Object to use when throtteling tasks.</param>
+        /// <param name="verbose">Flag for output.</param>
+        /// <returns>A flag indicating success or failure.</returns>
         public bool RunTask(Task task, string description, bool throttle, RequestThrottler RequestThrottler, bool verbose = true) {
             try
             {
